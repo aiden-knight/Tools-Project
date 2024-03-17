@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Tutorial2SS.uss?fileID=7433441132597879392&amp;guid=2a213891b6cfd5d47b5f5851aa2d54b8&amp;type=3#Tutorial2SS" />
+    <ui:Label tabindex="-1" text="Buttons:" display-tooltip-when-elided="true" name="header" style="-unity-font-style: bold; flex-grow: 0;" />
+    <ui:VisualElement name="container" style="flex-grow: 0.5; background-color: rgba(0, 0, 0, 0); flex-direction: row; justify-content: center; align-items: stretch; align-self: auto;">
+        <ui:Button text="Button" display-tooltip-when-elided="true" class="TestButton" />
+        <ui:Button text="Button" display-tooltip-when-elided="true" name="Button" class="TestButton" />
+        <ui:Button text="Button" display-tooltip-when-elided="true" class="TestButton" />
+    </ui:VisualElement>
+</ui:UXML>

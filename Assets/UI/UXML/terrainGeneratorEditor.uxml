@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:Label tabindex="-1" text="Dimensions" display-tooltip-when-elided="true" name="title" />
+    <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0);">
+        <ui:IntegerField label="Width" value="128" binding-path="genWidth" />
+        <ui:IntegerField label="Height" value="128" binding-path="genHeight" />
+        <ui:Foldout text="Foldout">
+            <ui:MinMaxSlider picking-mode="Ignore" label="Min/Max Slider" min-value="10" max-value="12" low-limit="-10" high-limit="40" />
+        </ui:Foldout>
+    </ui:VisualElement>
+</ui:UXML>
