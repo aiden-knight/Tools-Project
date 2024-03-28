@@ -36,6 +36,5 @@ public class Watchable<T>
     public Watchable(T value)
     {
         m_value = value;
-        m_OnChanged?.Invoke(m_value);
     }
 }
