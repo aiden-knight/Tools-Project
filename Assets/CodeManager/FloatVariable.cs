@@ -3,17 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-[System.Serializable]
-public class FloatEvent : UnityEvent<float>
-{
-
-}
-
 [CreateAssetMenu(menuName = "Code Manager/Float Scriptable Object")]
 public class FloatVariable : ScriptableObject
 {
-    [SerializeField]
     float m_value;
+
+    [SerializeField]
+    public float DefaultValue;
 
     public float Value
     {
@@ -23,15 +19,15 @@ public class FloatVariable : ScriptableObject
             if(m_value != value)
             {
                 m_value = value;
-                m_OnValueChanged?.Invoke(m_value);
+                onValueChanged?.Invoke(m_value);
             }
         }
     }
 
-    [SerializeField]
-    public UnityEvent<float> m_OnValueChanged;
-    public FloatVariable(float value)
+    public UnityEvent<float> onValueChanged;
+
+    private void OnEnable()
     {
-        m_value = value;
+        m_value = DefaultValue;
     }
 }
