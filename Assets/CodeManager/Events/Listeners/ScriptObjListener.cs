@@ -7,17 +7,22 @@ namespace AidenK.CodeManager
 {
     public abstract class ScriptObjListener<T> : MonoBehaviour
     {
-        public ScriptObjEvent<T> ScriptableEvent;
-        public UnityEvent<T> CalledEvent;
+        public ScriptObjEvent<T> Event;
+        public UnityEvent<T> Response;
 
-        void Awake()
+        void OnEnable()
         {
-            ScriptableEvent.AddListener(this);
+            Event.AddListener(this);
+        }
+
+        private void OnDisable()
+        {
+            Event.RemoveListener(this);
         }
 
         public void Invoke(T value)
         {
-            CalledEvent?.Invoke(value);
+            Response?.Invoke(value);
         }
     }
 }
