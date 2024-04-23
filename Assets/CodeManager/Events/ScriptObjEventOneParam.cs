@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace AidenK.CodeManager
 {
-    public abstract class ScriptObjEvent<T> : ScriptableObject
+    public abstract class ScriptObjEventOneParam<T> : ScriptableObject
     {
-        List<ScriptObjListener<T>> m_listeners = new ();
+        List<ScriptObjListenerOneParam<T>> m_listeners = new ();
 
         public void Invoke(T value)
         {
@@ -17,12 +17,12 @@ namespace AidenK.CodeManager
             }
         }
 
-        public void AddListener(ScriptObjListener<T> listener)
+        public void AddListener(ScriptObjListenerOneParam<T> listener)
         {
             m_listeners.Add(listener);
         }
 
-        public void RemoveListener(ScriptObjListener<T> listener)
+        public void RemoveListener(ScriptObjListenerOneParam<T> listener)
         {
             m_listeners.Remove(listener);
         }

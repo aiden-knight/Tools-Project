@@ -5,10 +5,10 @@ using UnityEngine.Events;
 
 namespace AidenK.CodeManager
 {
-    public abstract class ScriptObjListener<T> : MonoBehaviour
+    public class ListenerNoParam : MonoBehaviour
     {
-        public ScriptObjEvent<T> Event;
-        public UnityEvent<T> Response;
+        public EventNoParam Event;
+        public UnityEvent Response;
 
         void OnEnable()
         {
@@ -20,9 +20,9 @@ namespace AidenK.CodeManager
             Event.RemoveListener(this);
         }
 
-        public void Invoke(T value)
+        public void Invoke()
         {
-            Response?.Invoke(value);
+            Response?.Invoke();
         }
     }
 }
