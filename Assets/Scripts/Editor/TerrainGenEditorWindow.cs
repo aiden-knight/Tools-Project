@@ -5,7 +5,7 @@ using UnityEditor;
 
 public class TerrainGenEditorWindow : EditorWindow
 {
-    [MenuItem("Terrain Generator/Main window")]
+    //[MenuItem("Terrain Generator/Main window")]
     public static void ShowWindow()
     {
         TerrainGenEditorWindow window = GetWindow<TerrainGenEditorWindow>();

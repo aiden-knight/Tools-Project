@@ -2,6 +2,6 @@ using UnityEngine;
 
 namespace AidenK.CodeManager
 {
-    [CreateAssetMenu(menuName = "Code Manager/Double Scriptable Object")]
+    [CreateAssetMenu(menuName = "Code Manager/Variables/Double", order = 0)]
     public class DoubleVariable : ScriptObjVariable<double> { }
 }
