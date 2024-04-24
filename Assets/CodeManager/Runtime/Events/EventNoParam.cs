@@ -5,7 +5,7 @@ using UnityEngine;
 namespace AidenK.CodeManager
 {
     [CreateAssetMenu(menuName = "Code Manager/Events/No Parameter Event", order = 0)]
-    public class EventNoParam : ScriptableObject
+    public class EventNoParam : ScriptObjEventBase
     {
         List<ListenerNoParam> m_listeners = new();
 

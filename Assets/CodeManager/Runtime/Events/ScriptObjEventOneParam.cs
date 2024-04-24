@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace AidenK.CodeManager
 {
-    public abstract class ScriptObjEventOneParam<T> : ScriptableObject
+    public abstract class ScriptObjEventOneParam<T> : ScriptObjEventBase
     {
         List<ScriptObjListenerOneParam<T>> m_listeners = new ();
 

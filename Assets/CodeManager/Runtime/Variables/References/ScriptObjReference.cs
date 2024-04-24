@@ -6,7 +6,7 @@ using System;
 namespace AidenK.CodeManager
 {
     [Serializable]
-    public abstract class ScriptObjReference<T>
+    public abstract class ScriptObjReference<T> : ScriptObjReferenceBase
     {
         public bool UseConstant;
         public T ConstantValue;

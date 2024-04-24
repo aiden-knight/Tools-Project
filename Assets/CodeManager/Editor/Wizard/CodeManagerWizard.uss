@@ -3,3 +3,7 @@
     -unity-font-style: bold;
     color: rgb(68, 138, 255);
 }
+
+.unity-button {
+    -unity-text-align: upper-left;
+}

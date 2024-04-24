@@ -3,7 +3,7 @@ using UnityEngine.Events;
 
 namespace AidenK.CodeManager
 {
-    public abstract class ScriptObjVariable<T> : ScriptableObject
+    public abstract class ScriptObjVariable<T> : ScriptObjVariableBase
     {
         T m_value;
 

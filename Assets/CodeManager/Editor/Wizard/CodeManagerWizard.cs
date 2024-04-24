@@ -9,6 +9,8 @@ namespace AidenK.CodeManager
     {
         [SerializeField]
         private VisualTreeAsset m_VisualTreeAsset = default;
+        [SerializeField]
+        private StyleSheet uss;
 
         // Window creation and showing
         static CodeManagerWizard Instance;
@@ -19,6 +21,15 @@ namespace AidenK.CodeManager
         }
 
         VisualElement ScrollingContainerContent;
+
+        void SetupButtonFromGUID(string guid)
+        {
+            Button button = new Button();
+            button.text = AssetDatabase.GUIDToAssetPath(guid).Substring("Assets/".Length);
+            button.styleSheets.Add(uss);
+            button.clicked += () => { SelectAsset(AssetDatabase.GUIDToAssetPath(guid)); };
+            ScrollingContainerContent.Add(button);
+        }
         public void CreateGUI()
         {
             // Each editor window contains a root VisualElement object
@@ -31,13 +42,16 @@ namespace AidenK.CodeManager
             var scrollV = root.Q<ScrollView>("ScriptableObjects");
             ScrollingContainerContent = scrollV.Q("unity-content-container");
             
-            string[] guids = AssetDatabase.FindAssets("t:ScriptableObject", null);
-            foreach (string guid in guids)
-            {
-                Button button = new Button();
-                button.text = AssetDatabase.GUIDToAssetPath(guid);
-                ScrollingContainerContent.Add(button);
-            }
+            string[] varGuids = AssetDatabase.FindAssets("t:ScriptObjVariableBase", null);
+            string[] eventGuids = AssetDatabase.FindAssets("t:ScriptObjEventBase", null);
+            foreach (string guid in varGuids) SetupButtonFromGUID(guid);
+            foreach (string guid in eventGuids) SetupButtonFromGUID(guid);
+        }
+
+        public void SelectAsset(string path)
+        {
+            EditorUtility.FocusProjectWindow();
+            Selection.activeObject = AssetDatabase.LoadAssetAtPath(path, typeof(Object));
         }
 
         public void OnGUI()

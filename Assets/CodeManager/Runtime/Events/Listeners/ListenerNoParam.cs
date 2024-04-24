@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 namespace AidenK.CodeManager
 {
-    public class ListenerNoParam : MonoBehaviour
+    public class ListenerNoParam : ScriptObjListenerBase
     {
         public EventNoParam Event;
         public UnityEvent Response;
