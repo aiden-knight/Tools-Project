@@ -1,7 +1,9 @@
 {
     "name": "AidenK.WaveFunctionCollapse.Editor",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:b904dafb22a33d34a9bd63eba43d150f"
+    ],
     "includePlatforms": [
         "Editor"
     ],
