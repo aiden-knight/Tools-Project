@@ -66,6 +66,11 @@ namespace AidenK.CodeManager
                     changedAssets.moved.Add((movedAssets[i], movedFromAssetPaths[i]));
                 }
             }
+
+            if (!changedAssets.IsEmpty())
+            {
+                CodeManagerWizard.AssetChanges = changedAssets;
+            }
         }
     }
 
@@ -100,8 +105,7 @@ namespace AidenK.CodeManager
             button.text = path.Substring("Assets/".Length);
             button.name = path;
             button.styleSheets.Add(uss);
-            button.clicked += () => { SelectAsset(path); };
-            //button.RegisterCallback()
+            button.RegisterCallback<ClickEvent, string>(SelectAsset, path);
             ScrollingContainerContent.Add(button);
         }
         public void CreateGUI()
@@ -124,7 +128,7 @@ namespace AidenK.CodeManager
             AssetChanges.Clear();
         }
 
-        public void SelectAsset(string path)
+        public void SelectAsset(ClickEvent evt, string path)
         {
             EditorUtility.FocusProjectWindow();
             Selection.activeObject = AssetDatabase.LoadAssetAtPath(path, typeof(UnityEngine.Object));
@@ -134,17 +138,9 @@ namespace AidenK.CodeManager
         {
             if(!AssetChanges.IsEmpty())
             {
-                foreach(string reimported in AssetChanges.reimported)
-                {
-                    // if already exists don't add
-                    if (ScrollingContainerContent.Children().Where(elem => elem.name == reimported).First() != null) continue;
-                    
-                    SetupButtonFromPath(reimported);
-                }
-
                 foreach(string deleted in AssetChanges.deleted)
                 {
-                    VisualElement elem = ScrollingContainerContent.Children().Where(elem => elem.name == deleted).First();
+                    VisualElement elem = ScrollingContainerContent.Children().Where(elem => elem.name == deleted).FirstOrDefault();
                     if(elem != null)
                     {
                         ScrollingContainerContent.Remove(elem);
@@ -153,24 +149,28 @@ namespace AidenK.CodeManager
 
                 foreach((string movedTo, string movedFrom) in AssetChanges.moved)
                 {
-                    VisualElement elem = ScrollingContainerContent.Children().Where(elem => elem.name == movedFrom).First();
+                    VisualElement elem = ScrollingContainerContent.Children().Where(elem => elem.name == movedFrom).FirstOrDefault();
                     if (elem == null) continue;
 
                     if(elem is Button button)
                     {
                         button.name = movedTo;
                         button.text = movedTo.Substring("Assets/".Length);
-                        
+                        button.UnregisterCallback<ClickEvent, string>(SelectAsset);
+                        button.RegisterCallback<ClickEvent, string>(SelectAsset, movedTo);
                     }
                 }
 
-                string[] varGuids = AssetDatabase.FindAssets("t:ScriptObjVariableBase", null);
-                string[] eventGuids = AssetDatabase.FindAssets("t:ScriptObjEventBase", null);
-                foreach (string guid in varGuids) SetupButtonFromGUID(guid);
-                foreach (string guid in eventGuids) SetupButtonFromGUID(guid);
+                // have to do this after move changes or will create duplicate
+                foreach (string reimported in AssetChanges.reimported)
+                {
+                    // if already exists don't add
+                    if (ScrollingContainerContent.Children().Where(elem => elem.name == reimported).FirstOrDefault() != null) continue;
+
+                    SetupButtonFromPath(reimported);
+                }
 
                 AssetChanges.Clear();
-                Debug.Log("Rebuilt UI");
             }
         }
     }
