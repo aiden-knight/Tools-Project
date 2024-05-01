@@ -9,19 +9,19 @@ using UnityEngine.UIElements;
 
 namespace AidenK.CodeManager
 {
-    [CustomEditor(typeof(ScriptObjVariable<>))]
-    public class VariableEditor<T> : Editor
+    [CustomEditor(typeof(ScriptObjEventBase), true)]
+    public class EventEditor: Editor
     {
         public override VisualElement CreateInspectorGUI()
         {
             VisualElement root = new VisualElement();
             root.Add(new IMGUIContainer(OnInspectorGUI));
 
-            string[] guids = AssetDatabase.FindAssets("AidenK.CodeManager.VariableEditor t:VisualTreeAsset");
-            if (guids.Length > 1) Debug.LogError("Found more than one uxml file of given name: AidenK.CodeManager.VariableEditor");
+            string[] guids = AssetDatabase.FindAssets("AidenK.CodeManager.EventEditor t:VisualTreeAsset");
+            if (guids.Length > 1) Debug.LogError("Found more than one uxml file of given name: AidenK.CodeManager.EventEditor");
             if (guids.Length == 0)
             {
-                Debug.LogError("Could not find AidenK.CodeManager.VariableEditor uxml file");
+                Debug.LogError("Could not find AidenK.CodeManager.EventEditor uxml file");
                 return new Label("Error with loading UXML on CreateInspectorGUI");
             }
 
