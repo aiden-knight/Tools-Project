@@ -259,11 +259,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b0332f9f2c9d494eb281cbc1aa7b3e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Speed:
+  m_Health:
     UseConstant: 0
     ConstantValue: 0
     Variable: {fileID: 11400000, guid: 3b7edcc56e2854d4ebfe7f94ad191731, type: 2}
-  PositionUpdated: {fileID: 11400000, guid: acc4670b3712ff4459b2aa07d6c3baf3, type: 2}
+  m_Speed: {fileID: 11400000, guid: 3b7edcc56e2854d4ebfe7f94ad191731, type: 2}
+  PositionUpdated: {fileID: 11400000, guid: a37072f378c9de546b4d4b1a3434fe56, type: 2}
+  ints: 0c00000000000000
 --- !u!1 &1260210401
 GameObject:
   m_ObjectHideFlags: 0
@@ -403,7 +405,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1171182031958140bdf8a72d68c721f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Event: {fileID: 11400000, guid: acc4670b3712ff4459b2aa07d6c3baf3, type: 2}
+  Event: {fileID: 11400000, guid: a37072f378c9de546b4d4b1a3434fe56, type: 2}
   Response:
     m_PersistentCalls:
       m_Calls:
