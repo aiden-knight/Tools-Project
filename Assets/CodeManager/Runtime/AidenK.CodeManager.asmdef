@@ -1,7 +1,9 @@
 {
     "name": "AidenK.CodeManager",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        ""
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
