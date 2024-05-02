@@ -169,7 +169,7 @@ namespace AidenK.CodeManager
             foreach (string guid in varGuids) SetupButtonFromGUID(guid);
             foreach (string guid in eventGuids) SetupButtonFromGUID(guid);
 
-            List<ScriptObjListenerBase> scriptObjListeners = UnityEngine.Object.FindObjectsOfType<ScriptObjListenerBase>(true).ToList();
+            List<ScriptObjListenerBase> scriptObjListeners = FindObjectsOfType<ScriptObjListenerBase>(true).ToList();
             foreach(var listener in scriptObjListeners)
             {
                 SetupButtonFromObject(listener.gameObject);

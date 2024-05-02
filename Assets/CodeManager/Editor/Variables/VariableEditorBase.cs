@@ -5,8 +5,8 @@ using UnityEngine.UIElements;
 
 namespace AidenK.CodeManager
 {
-    //[CustomEditor(typeof(ScriptObjVariable<>))]
-    public class VariableEditor<T> : Editor
+    [CustomEditor(typeof(ScriptObjVariableBase), true)]
+    public class VariableEditorBase : Editor
     {
         public void SelectObject(ClickEvent evt, GameObject obj)
         {
@@ -21,7 +21,7 @@ namespace AidenK.CodeManager
             Button button = new Button();
 
             string name;
-            if(obj.scene.name != null)
+            if (obj.scene.name != null)
             {
                 name = "Scene: ";
             }
@@ -40,7 +40,7 @@ namespace AidenK.CodeManager
         public override VisualElement CreateInspectorGUI()
         {
             VisualElement root = new VisualElement();
-            
+
             root.Add(new IMGUIContainer(OnInspectorGUI));
 
             string[] guids = AssetDatabase.FindAssets("AidenK.CodeManager.VariableEditor t:VisualTreeAsset");
@@ -60,10 +60,10 @@ namespace AidenK.CodeManager
             ScrollingContainerContent = scrollV.Q("unity-content-container");
 
             List<GameObject> references = AssetFinder.FindReferences(serializedObject.targetObject);
-            foreach(GameObject obj in references)
+            foreach (GameObject obj in references)
             {
                 SetupButtonFromObject(obj);
-            }            
+            }
 
             return root;
         }
