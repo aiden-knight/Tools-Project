@@ -1,5 +1,0 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/CodeManager/Editor/Variables/VariableEditor.uss?fileID=7433441132597879392&amp;guid=46434b152db18e34ebf2f6eda89edd3d&amp;type=3#VariableEditor" />
-    <ui:Label tabindex="-1" text="References:" display-tooltip-when-elided="true" style="padding-top: 20px;" />
-    <ui:ScrollView name="References" />
-</ui:UXML>

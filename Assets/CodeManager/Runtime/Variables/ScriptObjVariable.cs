@@ -5,6 +5,7 @@ namespace AidenK.CodeManager
 {
     public abstract class ScriptObjVariable<T> : ScriptObjVariableBase
     {
+        [SerializeField, ReadOnly]
         T m_value;
 
         public T DefaultValue;

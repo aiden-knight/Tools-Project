@@ -7,11 +7,8 @@ public class Tester : MonoBehaviour
     [SerializeField]
     FloatReference m_Health;
 
-    [SerializeField] ScriptObjVariable<float> m_Speed;
     [SerializeField]
     Vector3Event PositionUpdated;
-    [SerializeField]
-    List<int> ints = new List<int>();
 
     // Start is called before the first frame update
     void Start()

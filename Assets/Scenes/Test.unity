@@ -263,9 +263,7 @@ MonoBehaviour:
     UseConstant: 0
     ConstantValue: 0
     Variable: {fileID: 11400000, guid: 3b7edcc56e2854d4ebfe7f94ad191731, type: 2}
-  m_Speed: {fileID: 11400000, guid: 3b7edcc56e2854d4ebfe7f94ad191731, type: 2}
   PositionUpdated: {fileID: 11400000, guid: d16760bda518ff441bca993edd3ef75e, type: 2}
-  ints: 0c00000000000000
 --- !u!1 &1260210401
 GameObject:
   m_ObjectHideFlags: 0

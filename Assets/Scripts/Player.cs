@@ -7,4 +7,7 @@ public class Player : MonoBehaviour
 {
     [SerializeField]
     private FloatVariable Health;
+
+    public int Ammo;
+    public float speed;
 }

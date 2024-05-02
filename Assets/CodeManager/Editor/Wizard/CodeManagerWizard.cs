@@ -149,6 +149,22 @@ namespace AidenK.CodeManager
             ScrollingContainerContent.Add(button);
         }
 
+        void GenerateClass(ClickEvent evt)
+        {
+            string dir = Application.dataPath + "/Generated/";
+            Directory.CreateDirectory(dir);
+            string outFile =  dir + "New Class.cs";
+
+
+            string classTxt = "using UnityEngine;\r\n\r\nnamespace AidenK.CodeManager\r\n{\r\n    [CreateAssetMenu(menuName = \"Code Manager/Generated/Variables/Player\", order = 0)]\r\n    public class PlayerVariable : ScriptObjVariable<Player> { }\r\n}";
+            using (StreamWriter writer = new StreamWriter(outFile))
+            {
+                writer.Write(classTxt);
+            }
+
+            AssetDatabase.Refresh();
+        }
+
         // Sets up the UI for the window on window creation
         public void CreateGUI()
         {
@@ -163,6 +179,8 @@ namespace AidenK.CodeManager
             ScrollingContainerContent = scrollV.Q("unity-content-container");
 
             inspectorContainer = root.Q("Inspector");
+
+            root.Q<Button>("Generate").RegisterCallback<ClickEvent>(GenerateClass);
 
             string[] varGuids = AssetDatabase.FindAssets("t:ScriptObjVariableBase", null);
             string[] eventGuids = AssetDatabase.FindAssets("t:ScriptObjEventBase", null);

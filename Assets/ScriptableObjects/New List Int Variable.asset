@@ -9,11 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c60c892832b6ab4499329efc3b0eaee6, type: 3}
-  m_Name: Health
+  m_Script: {fileID: 11500000, guid: 671b4108e84d6df44ae28c903bc50068, type: 3}
+  m_Name: New List Int Variable
   m_EditorClassIdentifier: 
-  m_value: 12
-  DefaultValue: 24
+  m_value: 
+  DefaultValue: 
   onValueChanged:
     m_PersistentCalls:
       m_Calls: []
