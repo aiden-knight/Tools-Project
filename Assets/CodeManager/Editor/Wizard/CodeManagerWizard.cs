@@ -6,95 +6,11 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.SceneManagement;
 using System.IO;
-using UnityEditor.TerrainTools;
 
 namespace AidenK.CodeManager
 {
-    // Holds lists to store all changed assets
-    public struct ChangedAssets
-    {
-        public List<string> reimported;
-        public List<string> deleted;
-        public List<(string movedTo, string movedFrom)> moved;
-        
-        public void Init()
-        {
-            reimported = new List<string>();
-            deleted = new List<string>();
-            moved = new List<(string, string)>();
-        }
-
-        public bool IsEmpty()
-        {
-            if (reimported == null || deleted == null || moved == null) return true;
-
-            return !(reimported.Any() || deleted.Any() || moved.Any());
-        }
-
-        public void Clear()
-        {
-            reimported?.Clear();
-            deleted?.Clear();
-            moved?.Clear();
-        }
-
-        public void Add(ChangedAssets other)
-        {
-            reimported.AddRange(other.reimported);
-            deleted.AddRange(other.deleted);
-            moved.AddRange(other.moved);
-        }
-    }
-
-    // Handles the moving, deleting, renaming and creation of assets
-    public class CodeManagerAssetPostprocessor : AssetPostprocessor
-    {
-        static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
-        {
-            ChangedAssets changedAssets = new ChangedAssets();
-            changedAssets.Init();
-            
-            foreach (string str in importedAssets)
-            {
-                Type type = AssetDatabase.GetMainAssetTypeAtPath(str);
-                if (type.IsSubclassOf(typeof(ScriptObjVariableBase)) || type.IsSubclassOf(typeof(ScriptObjEventBase)))
-                {
-                    changedAssets.reimported.Add(str);
-                }
-            }
-
-            foreach (string str in deletedAssets)
-            {
-                changedAssets.deleted.Add(str);
-            }
-
-            for (int i = 0; i < movedAssets.Length; i++)
-            {
-                Type type = AssetDatabase.GetMainAssetTypeAtPath(movedAssets[i]);
-                if (type.IsSubclassOf(typeof(ScriptObjVariableBase)) || type.IsSubclassOf(typeof(ScriptObjEventBase)))
-                {
-                    changedAssets.moved.Add((movedAssets[i], movedFromAssetPaths[i]));
-                }
-            }
-
-            if (!changedAssets.IsEmpty())
-            {
-                if(CodeManagerWizard.AssetChanges.IsEmpty())
-                {
-                    CodeManagerWizard.AssetChanges = changedAssets;
-                }
-                else
-                {
-                    CodeManagerWizard.AssetChanges.Add(changedAssets);
-                }
-            }
-        }
-    }
-
     public class CodeManagerWizard : EditorWindow
     {
-        public static ChangedAssets AssetChanges;
-
         [SerializeField]
         private VisualTreeAsset m_VisualTreeAsset = default;
         [SerializeField]
@@ -195,7 +111,7 @@ namespace AidenK.CodeManager
 
 
             ScrollingContainerContent.Sort(CompareByName);
-            AssetChanges.Clear();
+            CodeManagerAssetPostprocessor.AssetChanges.Clear();
         }
 
         // callback event for clicking a button that references a scriptable object
@@ -249,10 +165,10 @@ namespace AidenK.CodeManager
         // updates the scroll view container based off of changes to assets
         public void OnGUI()
         {
-            if(!AssetChanges.IsEmpty())
+            if(CodeManagerAssetPostprocessor.IsChanges())
             {
                 // removes buttons that reference the deleted asset from the scroll view container
-                foreach(string deleted in AssetChanges.deleted)
+                foreach(string deleted in CodeManagerAssetPostprocessor.AssetChanges.deleted)
                 {
                     VisualElement elem = ScrollingContainerContent.Children().Where(elem => elem.name == deleted).FirstOrDefault();
                     if(elem != null)
@@ -270,7 +186,7 @@ namespace AidenK.CodeManager
                 }
 
                 // updates buttons that reference the moved asset
-                foreach((string movedTo, string movedFrom) in AssetChanges.moved)
+                foreach((string movedTo, string movedFrom) in CodeManagerAssetPostprocessor.AssetChanges.moved)
                 {
                     VisualElement elem = ScrollingContainerContent.Children().Where(elem => elem.name == movedFrom).FirstOrDefault();
                     if (elem == null) continue;
@@ -286,7 +202,7 @@ namespace AidenK.CodeManager
 
                 // have to do this after move changes or will create duplicate
                 // assets that are changed (also created)
-                foreach (string reimported in AssetChanges.reimported)
+                foreach (string reimported in CodeManagerAssetPostprocessor.AssetChanges.reimported)
                 {
                     // if already exists don't add
                     if (ScrollingContainerContent.Children().Where(elem => elem.name == reimported).FirstOrDefault() != null) continue;
@@ -296,7 +212,7 @@ namespace AidenK.CodeManager
 
 
                 ScrollingContainerContent.Sort(CompareByName);
-                AssetChanges.Clear();
+                CodeManagerAssetPostprocessor.AssetChanges.Clear();
             }
         }
     }
