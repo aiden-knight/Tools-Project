@@ -53,18 +53,6 @@ namespace AidenK.CodeManager
             ScrollingContainerContent.Add(button);
         }
 
-        void SetupButtonFromObject(GameObject obj)
-        {
-            Button button = new Button();
-            string name = EditorSceneManager.GetActiveScene().name;
-            name += ": [" + obj.name + "]";
-            button.text = name;
-            button.name = name;
-            button.styleSheets.Add(uss);
-            button.RegisterCallback<ClickEvent, GameObject>(SelectObject, obj);
-            ScrollingContainerContent.Add(button);
-        }
-
         void GenerateClass(ClickEvent evt)
         {
             string dir = Application.dataPath + "/Generated/";
@@ -103,12 +91,6 @@ namespace AidenK.CodeManager
             foreach (string guid in varGuids) SetupButtonFromGUID(guid);
             foreach (string guid in eventGuids) SetupButtonFromGUID(guid);
 
-            List<ScriptObjListenerBase> scriptObjListeners = FindObjectsOfType<ScriptObjListenerBase>(true).ToList();
-            foreach(var listener in scriptObjListeners)
-            {
-                SetupButtonFromObject(listener.gameObject);
-            }
-
 
             ScrollingContainerContent.Sort(CompareByName);
             CodeManagerAssetPostprocessor.AssetChanges.Clear();
@@ -131,19 +113,6 @@ namespace AidenK.CodeManager
             currentInspector =  Editor.CreateEditor(asset).CreateInspectorGUI();
             inspectorContainer.Add(currentInspector);
 
-        }
-
-        public void SelectObject(ClickEvent evt, GameObject obj)
-        {
-            if (currentInspector != null)
-            {
-                inspectorContainer.Remove(currentInspector);
-                currentInspector = null;
-            }
-
-            Selection.activeObject = obj;
-            EditorApplication.ExecuteMenuItem("Window/General/Inspector");
-            EditorGUIUtility.PingObject(obj);
         }
 
         // compares visual elements by name to sort the scroll view
