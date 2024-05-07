@@ -17,6 +17,9 @@ namespace AidenK.CodeManager
         private StyleSheet uss;
 
         VisualElement ScrollingContainerContent;
+       
+        public TextField ClassType;
+        public DropdownField GenerateType;
 
         // container to put the created inspector in
         VisualElement inspectorContainer = null;
@@ -55,7 +58,8 @@ namespace AidenK.CodeManager
 
         void GenerateClass(ClickEvent evt)
         {
-            //ClassGenerator.Generate(ClassType.EventAndListener, "(int, string)");
+            ClassType type = (ClassType)GenerateType.index;
+            ClassGenerator.Generate(type, ClassType.text);
         }
 
         // Sets up the UI for the window on window creation
@@ -74,6 +78,16 @@ namespace AidenK.CodeManager
             inspectorContainer = root.Q("Inspector");
 
             root.Q<Button>("Generate").RegisterCallback<ClickEvent>(GenerateClass);
+
+            ClassType = root.Q<TextField>("ClassType");
+            GenerateType = root.Q<DropdownField>("GenerateType");
+
+            GenerateType.choices.Clear();
+            foreach(string name in Enum.GetNames(typeof(ClassType)))
+            {
+                GenerateType.choices.Add(name);
+            }
+            GenerateType.index = 1;
 
             string[] varGuids = AssetDatabase.FindAssets("t:ScriptObjVariableBase", null);
             string[] eventGuids = AssetDatabase.FindAssets("t:ScriptObjEventBase", null);

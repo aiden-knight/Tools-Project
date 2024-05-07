@@ -19,6 +19,8 @@ namespace AidenK.CodeManager
                 Component[] componentsArray = obj.GetComponents<Component>();
                 foreach (Component component in componentsArray)
                 {
+                    if (component == null) continue;
+
                     SerializedObject serializedObject = new SerializedObject(component);
                     SerializedProperty iterator = serializedObject.GetIterator();
 

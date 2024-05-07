@@ -4,8 +4,8 @@
     <ui:ScrollView name="ScriptableObjects" style="height: 259px;" />
     <ui:VisualElement name="Inspector" style="flex-grow: 1;" />
     <ui:VisualElement name="ClassGeneration" style="flex-grow: 0.5; background-color: rgba(0, 0, 0, 0); padding-top: 20px;">
-        <ui:TextField picking-mode="Ignore" value="Enter Class Type" />
-        <ui:DropdownField index="-1" choices="System.Collections.Generic.List`1[System.String]" />
+        <ui:TextField picking-mode="Ignore" value="Enter Class Type" name="ClassType" />
+        <ui:DropdownField index="-1" name="GenerateType" />
         <ui:Button text="Generate Class" display-tooltip-when-elided="true" name="Generate" />
     </ui:VisualElement>
 </ui:UXML>
