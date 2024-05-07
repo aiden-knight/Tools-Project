@@ -8,6 +8,11 @@ namespace AidenK.CodeManager
     {
         public List<T> Items = new List<T>();
 
+        public void Add(T item)
+        {
+            Items.Add(item);
+        }
+
         public void AddUnique(T item)
         {
             if (!Items.Contains(item))
