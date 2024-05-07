@@ -264,7 +264,7 @@ MonoBehaviour:
     ConstantValue: 0
     Variable: {fileID: 11400000, guid: 3b7edcc56e2854d4ebfe7f94ad191731, type: 2}
   PositionUpdated: {fileID: 11400000, guid: d16760bda518ff441bca993edd3ef75e, type: 2}
-  TupleEvent: {fileID: 11400000, guid: 81ab433cd9e42454882cb73570e7d49a, type: 2}
+  IntStringEvent: {fileID: 11400000, guid: d96fc9054504fe74bb0479d8225b7851, type: 2}
 --- !u!1 &1260210401
 GameObject:
   m_ObjectHideFlags: 0
@@ -442,10 +442,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1308072280}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e7ec8f52607e8ee4bb905d75fc8c46a6, type: 3}
+  m_Script: {fileID: 11500000, guid: 8bf3840db3d4514488d0a43350734435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Event: {fileID: 11400000, guid: 81ab433cd9e42454882cb73570e7d49a, type: 2}
+  Event: {fileID: 11400000, guid: d96fc9054504fe74bb0479d8225b7851, type: 2}
   Response:
     m_PersistentCalls:
       m_Calls:

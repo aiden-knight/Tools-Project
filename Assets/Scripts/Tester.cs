@@ -11,8 +11,7 @@ public class Tester : MonoBehaviour
     Vector3Event PositionUpdated;
 
     [SerializeField]
-    IntStringEvent TupleEvent;
-
+    IntStringEvent IntStringEvent;
     // Start is called before the first frame update
     void Start()
     {
@@ -22,6 +21,6 @@ public class Tester : MonoBehaviour
         Vector3 v3 = new Vector3(m_Health.Value, 0.0f, m_Health.Value);
         PositionUpdated.Invoke(v3);
 
-        TupleEvent.Invoke(((int)m_Health.Value, "I'm part of a tuple"));
+        IntStringEvent.Invoke(((int)m_Health.Value, "I am part of a tuple"));
     }
 }
