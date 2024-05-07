@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace AidenK.CodeManager
 {
-    public class ScriptObjCollectionBase : ScriptableObject
+    public abstract class ScriptObjCollectionBase : ScriptableObject
     {
 
     }

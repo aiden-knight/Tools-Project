@@ -4,9 +4,21 @@ using UnityEngine;
 
 namespace AidenK.CodeManager
 {
-    public class ScriptObjCollection<T> : ScriptObjCollectionBase
+    public abstract class ScriptObjCollection<T> : ScriptObjCollectionBase
     {
-        [SerializeField]
-        List<T> values = new List<T>();
+        public List<T> Items = new List<T>();
+
+        public void AddUnique(T item)
+        {
+            if (!Items.Contains(item))
+            {
+                Items.Add(item);
+            }
+        }
+
+        public void Remove(T item)
+        {
+            Items.Remove(item);
+        }
     }
 }
