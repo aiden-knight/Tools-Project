@@ -55,7 +55,7 @@ namespace AidenK.CodeManager
 
         void GenerateClass(ClickEvent evt)
         {
-            ClassGenerator.Generate(ClassType.EventAndListener, "(int, string)");
+            //ClassGenerator.Generate(ClassType.EventAndListener, "(int, string)");
         }
 
         // Sets up the UI for the window on window creation
