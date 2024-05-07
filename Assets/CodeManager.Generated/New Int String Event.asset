@@ -9,11 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 671b4108e84d6df44ae28c903bc50068, type: 3}
-  m_Name: New Player Variable
+  m_Script: {fileID: 11500000, guid: 46ab8b2aa7375284aacf212be8821f32, type: 3}
+  m_Name: New Int String Event
   m_EditorClassIdentifier: 
-  m_value: {fileID: 0}
-  DefaultValue: {fileID: 0}
-  onValueChanged:
-    m_PersistentCalls:
-      m_Calls: []

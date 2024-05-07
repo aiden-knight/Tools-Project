@@ -8,4 +8,9 @@ public class TesterListen : MonoBehaviour
     {
         Debug.Log(pos);
     }
+
+    public void TupleResponse((int, string) value)
+    {
+        Debug.Log(string.Format("Testing tuple, int: {0}, string: {1}", value.Item1, value.Item2));
+    }
 }

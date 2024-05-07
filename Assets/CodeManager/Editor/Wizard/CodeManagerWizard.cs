@@ -55,18 +55,7 @@ namespace AidenK.CodeManager
 
         void GenerateClass(ClickEvent evt)
         {
-            string dir = Application.dataPath + "/Generated/";
-            Directory.CreateDirectory(dir);
-            string outFile =  dir + "New Class.cs";
-
-
-            string classTxt = "using UnityEngine;\r\n\r\nnamespace AidenK.CodeManager\r\n{\r\n    [CreateAssetMenu(menuName = \"Code Manager/Generated/Variables/Player\", order = 0)]\r\n    public class PlayerVariable : ScriptObjVariable<Player> { }\r\n}";
-            using (StreamWriter writer = new StreamWriter(outFile))
-            {
-                writer.Write(classTxt);
-            }
-
-            AssetDatabase.Refresh();
+            ClassGenerator.Generate(ClassType.EventAndListener, "(int, string)");
         }
 
         // Sets up the UI for the window on window creation

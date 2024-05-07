@@ -264,6 +264,7 @@ MonoBehaviour:
     ConstantValue: 0
     Variable: {fileID: 11400000, guid: 3b7edcc56e2854d4ebfe7f94ad191731, type: 2}
   PositionUpdated: {fileID: 11400000, guid: d16760bda518ff441bca993edd3ef75e, type: 2}
+  TupleEvent: {fileID: 11400000, guid: 81ab433cd9e42454882cb73570e7d49a, type: 2}
 --- !u!1 &1260210401
 GameObject:
   m_ObjectHideFlags: 0
@@ -369,6 +370,7 @@ GameObject:
   - component: {fileID: 1308072281}
   - component: {fileID: 1308072282}
   - component: {fileID: 1308072283}
+  - component: {fileID: 1308072284}
   m_Layer: 0
   m_Name: Listener
   m_TagString: Untagged
@@ -431,6 +433,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: efc1adee710c6eb4da1c9e32e75dd366, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1308072284
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1308072280}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7ec8f52607e8ee4bb905d75fc8c46a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Event: {fileID: 11400000, guid: 81ab433cd9e42454882cb73570e7d49a, type: 2}
+  Response:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1308072283}
+        m_TargetAssemblyTypeName: TesterListen, Assembly-CSharp
+        m_MethodName: TupleResponse
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1001 &2831146295997381073
 PrefabInstance:
   m_ObjectHideFlags: 0

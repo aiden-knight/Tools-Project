@@ -1,7 +1,4 @@
 namespace AidenK.CodeManager
 {
-    public class BoolListener : ScriptObjListenerOneParam<bool>
-    {
-        
-    }
+    public class BoolListener : ScriptObjListenerOneParam<bool> {}
 }
