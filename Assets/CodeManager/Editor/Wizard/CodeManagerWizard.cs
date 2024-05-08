@@ -65,6 +65,17 @@ namespace AidenK.CodeManager
             ClassGenerator.Generate(type, ClassType.value);
         }
 
+        void Deselect(ClickEvent evt)
+        {
+            if (currentInspector != null)
+            {
+                inspectorContainer.Remove(currentInspector);
+                currentInspector = null;
+            }
+
+            Selection.activeObject = null;
+        }
+
         void ClassTypeChanged(ChangeEvent<string> evt)
         {
             wizardData.classType = ClassType.value;
@@ -90,7 +101,9 @@ namespace AidenK.CodeManager
 
             inspectorContainer = root.Q("Inspector");
 
+            root.Q<Button>("DeselectScriptObj").RegisterCallback<ClickEvent>(Deselect);
             root.Q<Button>("Generate").RegisterCallback<ClickEvent>(GenerateClass);
+
 
             ClassType = root.Q<TextField>("ClassType");
             GenerateType = root.Q<DropdownField>("GenerateType");

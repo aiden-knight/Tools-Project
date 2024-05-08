@@ -18,6 +18,7 @@ namespace AidenK.CodeManager
                 if (!m_value.Equals(value))
                 {
                     m_value = value;
+                    if(debug) Debug.Log("Value Changed");
                     onValueChanged?.Invoke(m_value);
                 }
             }

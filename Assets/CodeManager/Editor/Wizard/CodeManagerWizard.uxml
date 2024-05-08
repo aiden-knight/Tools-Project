@@ -2,6 +2,7 @@
     <Style src="project://database/Assets/CodeManager/Editor/Wizard/CodeManagerWizard.uss?fileID=7433441132597879392&amp;guid=e34849304aefb594f9d1a07c00cd92a5&amp;type=3#CodeManagerWizard" />
     <ui:Label tabindex="-1" text="Scriptable Objects:" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
     <ui:ScrollView name="ScriptableObjects" style="height: 259px;" />
+    <ui:Button text="Deselect" display-tooltip-when-elided="true" name="DeselectScriptObj" />
     <ui:VisualElement name="Inspector" style="flex-grow: 1;" />
     <ui:VisualElement name="ClassGeneration" style="flex-grow: 0.5; background-color: rgba(0, 0, 0, 0); padding-top: 20px;">
         <ui:TextField picking-mode="Ignore" value="Enter Class Type" name="ClassType" />
