@@ -20,6 +20,7 @@ namespace AidenK.CodeManager
        
         public TextField ClassType;
         public DropdownField GenerateType;
+        static int DropdownIndex = 1;
 
         // container to put the created inspector in
         VisualElement inspectorContainer = null;
@@ -62,6 +63,11 @@ namespace AidenK.CodeManager
             ClassGenerator.Generate(type, ClassType.text);
         }
 
+        void GenerateTypeChanged(ChangeEvent<string> evt)
+        {
+            DropdownIndex = GenerateType.index;
+        }
+
         // Sets up the UI for the window on window creation
         public void CreateGUI()
         {
@@ -87,7 +93,8 @@ namespace AidenK.CodeManager
             {
                 GenerateType.choices.Add(name);
             }
-            GenerateType.index = 1;
+            GenerateType.RegisterValueChangedCallback(GenerateTypeChanged);
+            GenerateType.index = DropdownIndex;
 
             string[] varGuids = AssetDatabase.FindAssets("t:ScriptObjVariableBase", null);
             string[] eventGuids = AssetDatabase.FindAssets("t:ScriptObjEventBase", null);
