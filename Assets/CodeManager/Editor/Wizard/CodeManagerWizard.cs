@@ -20,7 +20,9 @@ namespace AidenK.CodeManager
        
         public TextField ClassType;
         public DropdownField GenerateType;
-        static int DropdownIndex = 1;
+
+        // For ensuring fields don't reset on unity reimport
+        [SerializeField] WizardData wizardData;
 
         // container to put the created inspector in
         VisualElement inspectorContainer = null;
@@ -60,12 +62,17 @@ namespace AidenK.CodeManager
         void GenerateClass(ClickEvent evt)
         {
             ClassType type = (ClassType)GenerateType.index;
-            ClassGenerator.Generate(type, ClassType.text);
+            ClassGenerator.Generate(type, ClassType.value);
+        }
+
+        void ClassTypeChanged(ChangeEvent<string> evt)
+        {
+            wizardData.classType = ClassType.value;
         }
 
         void GenerateTypeChanged(ChangeEvent<string> evt)
         {
-            DropdownIndex = GenerateType.index;
+            wizardData.dropdownIndex = GenerateType.index;
         }
 
         // Sets up the UI for the window on window creation
@@ -93,15 +100,33 @@ namespace AidenK.CodeManager
             {
                 GenerateType.choices.Add(name);
             }
+
+            string[] wizDataGuid = AssetDatabase.FindAssets("t:WizardData", null);
+            if(wizDataGuid.Length > 0)
+            {
+                wizardData = AssetDatabase.LoadAssetAtPath<WizardData>(AssetDatabase.GUIDToAssetPath(wizDataGuid[0]));
+            }
+            else
+            {
+                wizardData = ScriptableObject.CreateInstance<WizardData>();
+                AssetDatabase.CreateAsset(wizardData, "Assets/AidenK.CodeManager/WizardData.asset");
+                AssetDatabase.SaveAssets();
+            }
+
+
+            ClassType.value = wizardData.classType;
+            GenerateType.index = wizardData.dropdownIndex;
+
+            ClassType.RegisterValueChangedCallback(ClassTypeChanged);
             GenerateType.RegisterValueChangedCallback(GenerateTypeChanged);
-            GenerateType.index = DropdownIndex;
 
             string[] varGuids = AssetDatabase.FindAssets("t:ScriptObjVariableBase", null);
             string[] eventGuids = AssetDatabase.FindAssets("t:ScriptObjEventBase", null);
+            string[] collectionGuids = AssetDatabase.FindAssets("t:ScriptObjCollectionBase", null);
             foreach (string guid in varGuids) SetupButtonFromGUID(guid);
             foreach (string guid in eventGuids) SetupButtonFromGUID(guid);
-
-
+            foreach (string guid in collectionGuids) SetupButtonFromGUID(guid);
+            
             ScrollingContainerContent.Sort(CompareByName);
             CodeManagerAssetPostprocessor.AssetChanges.Clear();
         }

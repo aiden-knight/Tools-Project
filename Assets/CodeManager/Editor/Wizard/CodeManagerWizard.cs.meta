@@ -7,6 +7,7 @@ MonoImporter:
   - m_ViewDataDictionary: {instanceID: 0}
   - m_VisualTreeAsset: {fileID: 9197481963319205126, guid: 2ccba4040faec8b47bef57323a79e822, type: 3}
   - uss: {fileID: 7433441132597879392, guid: e34849304aefb594f9d1a07c00cd92a5, type: 3}
+  - wizardData: {fileID: 11400000, guid: a25c03844b33a5749a8eebda589e5a33, type: 2}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

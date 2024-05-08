@@ -45,7 +45,7 @@ namespace AidenK.CodeManager
             AssetDatabase.Refresh();
         }
 
-        static string dir = Application.dataPath + "/CodeManager.Generated/";
+        static string dir = Application.dataPath + "/AidenK.CodeManager/Generated/";
         static string NameFixer(string type)
         {
             // iterate backwards over type string
