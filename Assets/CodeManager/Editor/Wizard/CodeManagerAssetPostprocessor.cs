@@ -57,12 +57,23 @@ namespace AidenK.CodeManager
             ChangedAssets changedAssets = new ChangedAssets();
             changedAssets.Init();
 
+            Type[] watchedTypes = 
+            {
+                typeof(ScriptObjVariableBase),
+                typeof(ScriptObjEventBase),
+                typeof(ScriptObjCollectionBase),
+            };
+
             foreach (string str in importedAssets)
             {
                 Type type = AssetDatabase.GetMainAssetTypeAtPath(str);
-                if (type.IsSubclassOf(typeof(ScriptObjVariableBase)) || type.IsSubclassOf(typeof(ScriptObjEventBase)))
+                foreach (Type watchedType in watchedTypes)
                 {
-                    changedAssets.reimported.Add(str);
+                    if(type.IsSubclassOf(watchedType))
+                    {
+                        changedAssets.reimported.Add(str);
+                        break;
+                    }
                 }
             }
 
@@ -74,9 +85,13 @@ namespace AidenK.CodeManager
             for (int i = 0; i < movedAssets.Length; i++)
             {
                 Type type = AssetDatabase.GetMainAssetTypeAtPath(movedAssets[i]);
-                if (type.IsSubclassOf(typeof(ScriptObjVariableBase)) || type.IsSubclassOf(typeof(ScriptObjEventBase)))
+                foreach (Type watchedType in watchedTypes)
                 {
-                    changedAssets.moved.Add((movedAssets[i], movedFromAssetPaths[i]));
+                    if (type.IsSubclassOf(watchedType))
+                    {
+                        changedAssets.moved.Add((movedAssets[i], movedFromAssetPaths[i]));
+                        break;
+                    }
                 }
             }
 

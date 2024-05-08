@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86388a2843c30fc46aff291a536294c5, type: 3}
-  m_Name: New Vector 3 Collection
+  m_Script: {fileID: 11500000, guid: dc2c471e998db694c97a20183ea723ed, type: 3}
+  m_Name: New String Collection
   m_EditorClassIdentifier: 
   Items: []
