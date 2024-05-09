@@ -30,6 +30,8 @@ namespace AidenK.CodeManager
         /// </summary>
         public List<int> GameObjectInstanceIDs;
     }
+    // https://stackoverflow.com/questions/70782260/unique-unchanged-identifier-for-gameobject-in-unity
+    // Instance IDs not saved between editor sessions / play mode
 
     public enum AssetChanges
     {

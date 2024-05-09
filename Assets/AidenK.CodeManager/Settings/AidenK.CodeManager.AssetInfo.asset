@@ -8,6 +8,6 @@ TextAsset:
   m_PrefabAsset: {fileID: 0}
   m_Name: AidenK.CodeManager.AssetInfo
   m_Script: '[{"path":"Assets/ScriptableObjects/Health.asset","GUID":"3b7edcc56e2854d4ebfe7f94ad191731","AssetReferencesGUIDs":["ec95ef666f436ca4fbf263ce7606271c"],"GameObjectInstanceIDs":[-1764,23110,23126]},{"path":"Assets/ScriptableObjects/Load
-    Scene One.asset","GUID":"a54e5e8a59407b1419f7621091f8a22d","AssetReferencesGUIDs":[],"GameObjectInstanceIDs":[23110]},{"path":"Assets/ScriptableObjects/Position
+    Scene One.asset","GUID":"a54e5e8a59407b1419f7621091f8a22d","AssetReferencesGUIDs":[],"GameObjectInstanceIDs":[23004]},{"path":"Assets/ScriptableObjects/Position
     Updated.asset","GUID":"d16760bda518ff441bca993edd3ef75e","AssetReferencesGUIDs":[],"GameObjectInstanceIDs":[23126,23138]},{"path":"Assets/ScriptableObjects/Tuple
     Event Test.asset","GUID":"d96fc9054504fe74bb0479d8225b7851","AssetReferencesGUIDs":[],"GameObjectInstanceIDs":[23126,23138]}]'
