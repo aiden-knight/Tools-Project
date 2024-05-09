@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Health
   m_EditorClassIdentifier: 
   debug: 1
-  resetOn: 0
+  resetOn: 2
   m_value: 24
   DefaultValue: 24
   onValueChanged:

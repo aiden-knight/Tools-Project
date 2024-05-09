@@ -6,6 +6,7 @@ namespace AidenK.CodeManager
 {
     public abstract class ScriptObjCollectionBase : ScriptableObject
     {
-
+        [SerializeField]
+        protected bool debug = false;
     }
 }

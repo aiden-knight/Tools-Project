@@ -40,6 +40,11 @@ namespace AidenK.CodeManager
             }
         }
 
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             m_value = DefaultValue;
