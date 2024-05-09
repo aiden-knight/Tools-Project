@@ -54,7 +54,7 @@ namespace AidenK.CodeManager
             root.Add(new IMGUIContainer(OnInspectorGUI));
 
             Button button = new Button();
-            button.text = "Fire Event";
+            button.text = "Fire Event (Play Mode Only)";
             button.RegisterCallback<ClickEvent>(TriggerInvoke);
             root.Add(button);
 

@@ -55,7 +55,7 @@ namespace AidenK.CodeManager
             button.text = path.Substring("Assets/".Length);
             button.name = path;
             button.styleSheets.Add(uss);
-            button.RegisterCallback<ClickEvent, string>(SelectAsset, path);
+            button.RegisterCallback<ClickEvent, string>(SelectAssetCallback, path);
             ScrollingContainerContent.Add(button);
         }
 
@@ -74,6 +74,8 @@ namespace AidenK.CodeManager
             }
 
             Selection.activeObject = null;
+
+            wizardData.selectedAssetPath = string.Empty;
         }
 
         void ClassTypeChanged(ChangeEvent<string> evt)
@@ -104,16 +106,18 @@ namespace AidenK.CodeManager
             root.Q<Button>("DeselectScriptObj").RegisterCallback<ClickEvent>(Deselect);
             root.Q<Button>("Generate").RegisterCallback<ClickEvent>(GenerateClass);
 
-
+            // get generation Visual Elements
             ClassType = root.Q<TextField>("ClassType");
             GenerateType = root.Q<DropdownField>("GenerateType");
 
+            // add list of choices for generation to dropdown
             GenerateType.choices.Clear();
             foreach(string name in Enum.GetNames(typeof(ClassType)))
             {
                 GenerateType.choices.Add(name);
             }
 
+            // get saved data for the UI
             string[] wizDataGuid = AssetDatabase.FindAssets("t:WizardData", null);
             if(wizDataGuid.Length > 0)
             {
@@ -126,26 +130,41 @@ namespace AidenK.CodeManager
                 AssetDatabase.SaveAssets();
             }
 
-
+            // get the saved data for class generation
             ClassType.value = wizardData.classType;
             GenerateType.index = wizardData.dropdownIndex;
 
+            // setup generation callbacks
             ClassType.RegisterValueChangedCallback(ClassTypeChanged);
             GenerateType.RegisterValueChangedCallback(GenerateTypeChanged);
 
-            string[] varGuids = AssetDatabase.FindAssets("t:ScriptObjVariableBase", null);
-            string[] eventGuids = AssetDatabase.FindAssets("t:ScriptObjEventBase", null);
-            string[] collectionGuids = AssetDatabase.FindAssets("t:ScriptObjCollectionBase", null);
-            foreach (string guid in varGuids) SetupButtonFromGUID(guid);
-            foreach (string guid in eventGuids) SetupButtonFromGUID(guid);
-            foreach (string guid in collectionGuids) SetupButtonFromGUID(guid);
-            
+            // find scriptable objects in assets
+            string[] typeFilters = { "t:ScriptObjVariableBase", "t:ScriptObjEventBase", "t:ScriptObjCollectionBase" };
+            foreach(string filter in typeFilters)
+            {
+                string[] guids = AssetDatabase.FindAssets(filter, null);
+                foreach(string guid in guids) SetupButtonFromGUID(guid);
+            }
+
+            if (wizardData.selectedAssetPath != string.Empty)
+            {
+                VisualElement elem = ScrollingContainerContent.Children().Where(elem => elem.name == wizardData.selectedAssetPath).FirstOrDefault();
+                if (elem == null)
+                {
+                    wizardData.selectedAssetPath = string.Empty;
+                }
+                else
+                {
+                    SelectAsset(wizardData.selectedAssetPath);
+                }
+            }
+
             ScrollingContainerContent.Sort(CompareByName);
             CodeManagerAssetPostprocessor.AssetChanges.Clear();
         }
 
-        // callback event for clicking a button that references a scriptable object
-        public void SelectAsset(ClickEvent evt, string path)
+        // show asset's inspector and select it in assets folder
+        private void SelectAsset(string path)
         {
             if (currentInspector != null)
             {
@@ -158,9 +177,15 @@ namespace AidenK.CodeManager
             Selection.activeObject = asset;
             selectedObjectPath = path;
 
-            currentInspector =  Editor.CreateEditor(asset).CreateInspectorGUI();
+            currentInspector = Editor.CreateEditor(asset).CreateInspectorGUI();
             inspectorContainer.Add(currentInspector);
+        }
 
+        // callback event for clicking a button that references a scriptable object
+        void SelectAssetCallback(ClickEvent evt, string path)
+        {
+            SelectAsset(path);
+            wizardData.selectedAssetPath = path;
         }
 
         // compares visual elements by name to sort the scroll view
@@ -212,8 +237,8 @@ namespace AidenK.CodeManager
                     {
                         button.name = movedTo;
                         button.text = movedTo.Substring("Assets/".Length);
-                        button.UnregisterCallback<ClickEvent, string>(SelectAsset);
-                        button.RegisterCallback<ClickEvent, string>(SelectAsset, movedTo);
+                        button.UnregisterCallback<ClickEvent, string>(SelectAssetCallback);
+                        button.RegisterCallback<ClickEvent, string>(SelectAssetCallback, movedTo);
                     }
                 }
 

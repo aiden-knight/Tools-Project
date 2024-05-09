@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -19,7 +20,7 @@ namespace AidenK.CodeManager
                 if (!m_value.Equals(value))
                 {
                     m_value = value;
-                    if(debug) Debug.Log("Value Changed");
+                    if(debug) Debug.Log(GetType().ToString() + " value changed to " + m_value.ToString());
                     onValueChanged?.Invoke(m_value);
                 }
             }
