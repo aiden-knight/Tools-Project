@@ -7,6 +7,28 @@ using UnityEngine;
 
 namespace AidenK.CodeManager
 {
+    [System.Serializable]
+    /// <summary>Asset info for scriptable object types</summary> 
+    public struct AssetInfo
+    {
+        /// <summary>
+        /// path to the asset
+        /// </summary>
+        public string path;
+        /// <summary>
+        /// Globally unique identifier of the asset
+        /// </summary>
+        public string GUID;
+        /// <summary>
+        /// Guids of other assets that reference the asset
+        /// </summary>
+        public List<string> AssetReferencesGUIDs;
+        /// <summary>
+        /// Instance IDs of game objects in scenes that reference asset
+        /// </summary>
+        public List<int> GameObjectInstanceIDs;
+    }
+
     public static class AssetFinder
     {
         public static List<GameObject> FindReferences(Object toFind)

@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!49 &4900000
+TextAsset:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: AidenK.CodeManager.AssetInfo
+  m_Script: '[{"path":"Assets/ScriptableObjects/Health.asset","GUID":"3b7edcc56e2854d4ebfe7f94ad191731","AssetReferencesGUIDs":[],"GameObjectInstanceIDs":[]},{"path":"Assets/ScriptableObjects/Second
+    Float.asset","GUID":"97bc149b99a84304c8ef77c4462960fb","AssetReferencesGUIDs":[],"GameObjectInstanceIDs":[]},{"path":"Assets/ScriptableObjects/Int
+    Event.asset","GUID":"8efdd0edc1afaac4a9618517ba4da1c5","AssetReferencesGUIDs":[],"GameObjectInstanceIDs":[]},{"path":"Assets/ScriptableObjects/New
+    Event No Param.asset","GUID":"a54e5e8a59407b1419f7621091f8a22d","AssetReferencesGUIDs":[],"GameObjectInstanceIDs":[]},{"path":"Assets/ScriptableObjects/New
+    Int String Event.asset","GUID":"d96fc9054504fe74bb0479d8225b7851","AssetReferencesGUIDs":[],"GameObjectInstanceIDs":[]},{"path":"Assets/ScriptableObjects/Position
+    Updated.asset","GUID":"d16760bda518ff441bca993edd3ef75e","AssetReferencesGUIDs":[],"GameObjectInstanceIDs":[]},{"path":"Assets/ScriptableObjects/New
+    String Collection.asset","GUID":"44aefe41966e4c046a1113dce169d70f","AssetReferencesGUIDs":[],"GameObjectInstanceIDs":[]}]'

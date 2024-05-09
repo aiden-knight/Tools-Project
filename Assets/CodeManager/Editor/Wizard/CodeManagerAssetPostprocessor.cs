@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEngine;
+using Newtonsoft.Json;
 
 namespace AidenK.CodeManager
 {
@@ -45,18 +47,40 @@ namespace AidenK.CodeManager
     public class CodeManagerAssetPostprocessor : AssetPostprocessor
     {
         public static ChangedAssets AssetChanges;
+        public static List<AssetInfo> assetInfos = new List<AssetInfo>();
+        static bool loaded = false;
 
         public static bool IsChanges()
         {
             return !(AssetChanges.IsEmpty());
+        }
 
+        public static bool CheckLoad()
+        {
+            if (loaded) return true;
+
+            string[] guids = AssetDatabase.FindAssets("AidenK.CodeManager.AssetInfo t:TextAsset", new[] { "Assets/AidenK.CodeManager/Settings" });
+            if (guids.Length == 0) return false;
+
+            TextAsset jsonData = AssetDatabase.LoadAssetAtPath<TextAsset>(AssetDatabase.GUIDToAssetPath(guids[0]));
+            if (jsonData == null) return false;
+
+            string json = jsonData.text;
+            assetInfos = JsonConvert.DeserializeObject<List<AssetInfo>>(json);
+            if (assetInfos == null) return false;
+
+            loaded = true;
+            return true;
         }
 
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
+            bool jsonLoaded = CheckLoad();
+
             ChangedAssets changedAssets = new ChangedAssets();
             changedAssets.Init();
-
+            
+            // types to check for
             Type[] watchedTypes = 
             {
                 typeof(ScriptObjVariableBase),
@@ -64,6 +88,7 @@ namespace AidenK.CodeManager
                 typeof(ScriptObjCollectionBase),
             };
 
+            // created or modified assets (occurs when assets have moved)
             foreach (string str in importedAssets)
             {
                 Type type = AssetDatabase.GetMainAssetTypeAtPath(str);
@@ -77,11 +102,13 @@ namespace AidenK.CodeManager
                 }
             }
 
+            // any assets deleted
             foreach (string str in deletedAssets)
             {
                 changedAssets.deleted.Add(str);
             }
 
+            // any assets that have moved in assets
             for (int i = 0; i < movedAssets.Length; i++)
             {
                 Type type = AssetDatabase.GetMainAssetTypeAtPath(movedAssets[i]);
@@ -94,6 +121,7 @@ namespace AidenK.CodeManager
                     }
                 }
             }
+
 
             if (!changedAssets.IsEmpty())
             {

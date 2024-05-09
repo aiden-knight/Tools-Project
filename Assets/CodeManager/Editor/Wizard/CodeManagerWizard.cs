@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.SceneManagement;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace AidenK.CodeManager
 {
@@ -118,7 +119,7 @@ namespace AidenK.CodeManager
             }
 
             // get saved data for the UI
-            string[] wizDataGuid = AssetDatabase.FindAssets("t:WizardData", null);
+            string[] wizDataGuid = AssetDatabase.FindAssets("t:WizardData", new[] { "Assets/AidenK.CodeManager/Settings" });
             if(wizDataGuid.Length > 0)
             {
                 wizardData = AssetDatabase.LoadAssetAtPath<WizardData>(AssetDatabase.GUIDToAssetPath(wizDataGuid[0]));
@@ -139,11 +140,42 @@ namespace AidenK.CodeManager
             GenerateType.RegisterValueChangedCallback(GenerateTypeChanged);
 
             // find scriptable objects in assets
-            string[] typeFilters = { "t:ScriptObjVariableBase", "t:ScriptObjEventBase", "t:ScriptObjCollectionBase" };
-            foreach(string filter in typeFilters)
+
+            bool jsonLoaded = CodeManagerAssetPostprocessor.CheckLoad();
+            if (!jsonLoaded)
             {
-                string[] guids = AssetDatabase.FindAssets(filter, null);
-                foreach(string guid in guids) SetupButtonFromGUID(guid);
+                List<AssetInfo> assetInfos = new List<AssetInfo>();
+
+                string[] typeFilters = { "t:ScriptObjVariableBase", "t:ScriptObjEventBase", "t:ScriptObjCollectionBase" };
+                foreach (string filter in typeFilters)
+                {
+                    string[] guids = AssetDatabase.FindAssets(filter, null);
+                    foreach (string guid in guids) 
+                    { 
+                        string path = AssetDatabase.GUIDToAssetPath(guid);
+                        SetupButtonFromPath(path);
+
+                        AssetInfo assetInfo = new AssetInfo
+                        {
+                            GUID = guid,
+                            path = path,
+                            AssetReferencesGUIDs = new List<string>(),
+                            GameObjectInstanceIDs = new List<int>()
+                        };
+                        assetInfos.Add(assetInfo);
+                    }
+                }
+
+                TextAsset jsonAsset = new TextAsset(JsonConvert.SerializeObject(assetInfos));
+                AssetDatabase.CreateAsset(jsonAsset, "Assets/AidenK.CodeManager/Settings/AidenK.CodeManager.AssetInfo.asset");
+                AssetDatabase.SaveAssets();
+            }
+            else
+            {
+                foreach(AssetInfo assetinfo in CodeManagerAssetPostprocessor.assetInfos)
+                {
+                    SetupButtonFromGUID(assetinfo.GUID);
+                }
             }
 
             if (wizardData.selectedAssetPath != string.Empty)

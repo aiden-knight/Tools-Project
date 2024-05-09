@@ -3,6 +3,15 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 
+/*
+    Taken from sample code given by Austin from the Unite 2017 talk:
+    https://github.com/roboryantron/Unite2017/tree/master/Assets/Code/Variables/Editor
+
+    Video:
+    https://www.youtube.com/watch?v=raQ3iHhE_Kk
+ */
+
+
 namespace AidenK.CodeManager
 {
     [CustomPropertyDrawer(typeof(ScriptObjReferenceBase), true)]
