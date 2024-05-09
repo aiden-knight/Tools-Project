@@ -42,10 +42,21 @@ namespace AidenK.CodeManager
             ScrollingContainerContent.Add(button);
         }
 
+        void TriggerInvoke(ClickEvent evt)
+        {
+            ScriptObjEventBase objAsBase = serializedObject.targetObject as ScriptObjEventBase;
+            objAsBase.CallInvoke.Invoke();
+        }
+
         public override VisualElement CreateInspectorGUI()
         {
             VisualElement root = new VisualElement();
             root.Add(new IMGUIContainer(OnInspectorGUI));
+
+            Button button = new Button();
+            button.text = "Fire Event";
+            button.RegisterCallback<ClickEvent>(TriggerInvoke);
+            root.Add(button);
 
             VisualElement uxmlElement = ReferencesEditor.Instantiate();
             root.Add(uxmlElement);
@@ -59,6 +70,8 @@ namespace AidenK.CodeManager
                 SetupButtonFromObject(obj);
             }
 
+            
+
             return root;
         }
 
@@ -68,3 +81,4 @@ namespace AidenK.CodeManager
         }
     }
 }
+ 

@@ -5,9 +5,14 @@ using UnityEngine;
 namespace AidenK.CodeManager
 {
     [CreateAssetMenu(menuName = "Code Manager/Events/No Parameter Event", order = 0)]
-    public class EventNoParam : ScriptObjEventBase
+    public class NoParamEvent : ScriptObjEventBase
     {
-        List<ListenerNoParam> m_listeners = new();
+        List<NoParamListener> m_listeners = new();
+
+        private void OnEnable()
+        {
+            CallInvoke = Invoke;
+        }
 
         public void Invoke()
         {
@@ -18,12 +23,12 @@ namespace AidenK.CodeManager
             }
         }
 
-        public void AddListener(ListenerNoParam listener)
+        public void AddListener(NoParamListener listener)
         {
             m_listeners.Add(listener);
         }
 
-        public void RemoveListener(ListenerNoParam listener)
+        public void RemoveListener(NoParamListener listener)
         {
             m_listeners.Remove(listener);
         }

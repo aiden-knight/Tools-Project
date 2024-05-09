@@ -117,7 +117,7 @@ namespace AidenK.CodeManager
             string eventOutFile = "TNameEvent.cs";
             string eventClass = "using UnityEngine;\r\n\r\nnamespace AidenK.CodeManager\r\n{\r\n    [CreateAssetMenu(menuName = \"Code Manager/Generated/Events/TName Event\", order = 0)]\r\n    public class TNameEvent : ScriptObjEventOneParam<Type>\r\n    {\r\n\r\n    }\r\n}";
 
-            string listenerOutFile = "TName Listener.cs";
+            string listenerOutFile = "TNameListener.cs";
             string listenerClass = "namespace AidenK.CodeManager\r\n{\r\n    public class TNameListener : ScriptObjListenerOneParam<Type> {}\r\n}";
 
             string typeAsName = NameFixer(type);

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 namespace AidenK.CodeManager
 {
@@ -28,6 +29,18 @@ namespace AidenK.CodeManager
         public UnityEvent<T> onValueChanged;
 
         void OnEnable()
+        {
+            if(resetOn == ResetOn.Play)
+            {
+                m_value = DefaultValue;
+            }
+            else if(resetOn == ResetOn.SceneLoad)
+            {
+                SceneManager.sceneLoaded += OnSceneLoaded;
+            }
+        }
+
+        void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             m_value = DefaultValue;
         }

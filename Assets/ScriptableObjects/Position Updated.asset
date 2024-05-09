@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e2bb58dcd0e0724d8913fcff2f39081, type: 3}
   m_Name: Position Updated
   m_EditorClassIdentifier: 
+  DebugValue: {x: 3, y: 2, z: 1}

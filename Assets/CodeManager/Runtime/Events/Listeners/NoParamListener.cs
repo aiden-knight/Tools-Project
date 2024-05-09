@@ -5,9 +5,9 @@ using UnityEngine.Events;
 
 namespace AidenK.CodeManager
 {
-    public class ListenerNoParam : ScriptObjListenerBase
+    public class NoParamListener : ScriptObjListenerBase
     {
-        public EventNoParam Event;
+        public NoParamEvent Event;
         public UnityEvent Response;
 
         void OnEnable()

@@ -8,6 +8,13 @@ namespace AidenK.CodeManager
     {
         List<ScriptObjListenerOneParam<T>> m_listeners = new ();
 
+        [SerializeField] T DebugValue;
+
+        private void OnEnable()
+        {
+            CallInvoke = () => { Invoke(DebugValue); };
+        }
+
         public void Invoke(T value)
         {
             // Iterate backwards in case event involves removing themself as a listener
