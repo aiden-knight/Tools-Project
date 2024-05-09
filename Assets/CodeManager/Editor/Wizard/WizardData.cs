@@ -9,12 +9,12 @@ namespace AidenK.CodeManager
         public int dropdownIndex;
         public string classType;
 
-        public string selectedAssetPath;
+        public string selectedAssetGUID;
         public WizardData() 
         {
             dropdownIndex = 1;
             classType = "Enter Class Here";
-            selectedAssetPath = string.Empty;
+            selectedAssetGUID = string.Empty;
         }
     }
 }

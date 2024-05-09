@@ -1,65 +1,64 @@
-using System;
+using Type = System.Type;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using Newtonsoft.Json;
+using Codice.Client.BaseCommands.BranchExplorer;
+using System.IO;
 
 namespace AidenK.CodeManager
 {
-    // Holds lists to store all changed assets
-    public struct ChangedAssets
+    /// <summary>Asset info for scriptable object types</summary> 
+    [System.Serializable]
+    public class AssetInfo
     {
-        public List<string> reimported;
-        public List<string> deleted;
-        public List<(string movedTo, string movedFrom)> moved;
-
-        public void Init()
-        {
-            reimported = new List<string>();
-            deleted = new List<string>();
-            moved = new List<(string, string)>();
-        }
-
-        public bool IsEmpty()
-        {
-            if (reimported == null || deleted == null || moved == null) return true;
-
-            return !(reimported.Any() || deleted.Any() || moved.Any());
-        }
-
-        public void Clear()
-        {
-            reimported?.Clear();
-            deleted?.Clear();
-            moved?.Clear();
-        }
-
-        public void Add(ChangedAssets other)
-        {
-            reimported.AddRange(other.reimported);
-            deleted.AddRange(other.deleted);
-            moved.AddRange(other.moved);
-        }
+        /// <summary>
+        /// path to the asset
+        /// </summary>
+        public string path;
+        /// <summary>
+        /// Globally unique identifier of the asset
+        /// </summary>
+        public string GUID;
+        /// <summary>
+        /// Guids of other assets that reference the asset
+        /// </summary>
+        public List<string> AssetReferencesGUIDs;
+        /// <summary>
+        /// Instance IDs of game objects in scenes that reference asset
+        /// </summary>
+        public List<int> GameObjectInstanceIDs;
     }
+
+    public enum AssetChanges
+    {
+        Created,
+        Deleted,
+        Moved
+    }
+
 
     // Handles the moving, deleting, renaming and creation of assets
     public class CodeManagerAssetPostprocessor : AssetPostprocessor
     {
-        public static ChangedAssets AssetChanges;
+        public static List<(AssetChanges, AssetInfo)> ChangedAssets = new List<(AssetChanges, AssetInfo)>();
         public static List<AssetInfo> assetInfos = new List<AssetInfo>();
         static bool loaded = false;
 
         public static bool IsChanges()
         {
-            return !(AssetChanges.IsEmpty());
+            return ChangedAssets.Count > 0;
         }
 
+        public const string jsonFilter = "AidenK.CodeManager.AssetInfo t:TextAsset";
+        public const string jsonFileName = "AidenK.CodeManager.AssetInfo.asset";
+        public static readonly string[] jsonFolder = { "Assets/AidenK.CodeManager/Settings/" };
         public static bool CheckLoad()
         {
             if (loaded) return true;
 
-            string[] guids = AssetDatabase.FindAssets("AidenK.CodeManager.AssetInfo t:TextAsset", new[] { "Assets/AidenK.CodeManager/Settings" });
+            string[] guids = AssetDatabase.FindAssets(jsonFilter, jsonFolder);
             if (guids.Length == 0) return false;
 
             TextAsset jsonData = AssetDatabase.LoadAssetAtPath<TextAsset>(AssetDatabase.GUIDToAssetPath(guids[0]));
@@ -76,9 +75,12 @@ namespace AidenK.CodeManager
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
             bool jsonLoaded = CheckLoad();
-
-            ChangedAssets changedAssets = new ChangedAssets();
-            changedAssets.Init();
+            if(!jsonLoaded)
+            {
+                Debug.Log("Cancelled OnPostProcess as json file not loaded");
+                return;
+            }
+            bool changes = false;
             
             // types to check for
             Type[] watchedTypes = 
@@ -89,50 +91,86 @@ namespace AidenK.CodeManager
             };
 
             // created or modified assets (occurs when assets have moved)
-            foreach (string str in importedAssets)
+            foreach (string path in importedAssets)
             {
-                Type type = AssetDatabase.GetMainAssetTypeAtPath(str);
+                string guid = AssetDatabase.AssetPathToGUID(path);
+                Type type = AssetDatabase.GetMainAssetTypeAtPath(path);
+
+                bool isOfWatchedType = false;
                 foreach (Type watchedType in watchedTypes)
                 {
                     if(type.IsSubclassOf(watchedType))
                     {
-                        changedAssets.reimported.Add(str);
+                        isOfWatchedType = true;
                         break;
                     }
+                }
+
+                // check performance of this vs foreach to determine order
+                if(isOfWatchedType && !assetInfos.Any(info => info.GUID == guid))
+                {
+                    AssetInfo info = new AssetInfo()
+                    {
+                        GUID = guid,
+                        path = path,
+                        AssetReferencesGUIDs = new List<string>(),
+                        GameObjectInstanceIDs = new List<int>()
+                    };
+                    ChangedAssets.Add((AssetChanges.Created, info));
+                    assetInfos.Add(info);
+                    changes = true;
                 }
             }
 
             // any assets deleted
             foreach (string str in deletedAssets)
             {
-                changedAssets.deleted.Add(str);
+                string guid = AssetDatabase.AssetPathToGUID(str);
+                AssetInfo info = assetInfos.FirstOrDefault(info => info.GUID == guid);
+
+                if (info != null)
+                {
+                    ChangedAssets.Add((AssetChanges.Deleted, info));
+                    assetInfos.Remove(info);
+                    changes = true;
+                }
             }
 
             // any assets that have moved in assets
             for (int i = 0; i < movedAssets.Length; i++)
             {
-                Type type = AssetDatabase.GetMainAssetTypeAtPath(movedAssets[i]);
-                foreach (Type watchedType in watchedTypes)
+                string guid = AssetDatabase.AssetPathToGUID(movedAssets[i]);
+                AssetInfo info = assetInfos.FirstOrDefault(info => info.GUID == guid);
+
+                if (info != null)
                 {
-                    if (type.IsSubclassOf(watchedType))
-                    {
-                        changedAssets.moved.Add((movedAssets[i], movedFromAssetPaths[i]));
-                        break;
-                    }
+                    info.path = movedAssets[i];
+                    ChangedAssets.Add((AssetChanges.Moved, info));
+                    changes = true;
                 }
             }
 
 
-            if (!changedAssets.IsEmpty())
+            if (changes)
             {
-                if (AssetChanges.IsEmpty())
+                string[] guids = AssetDatabase.FindAssets(jsonFilter, jsonFolder);
+                if (guids.Length == 0)
                 {
-                    AssetChanges = changedAssets;
+                    Debug.LogWarning(string.Format("Expected [{0}] to exist in folder: {1}", jsonFilter, jsonFolder[0]));
+                    return;
                 }
-                else
+
+                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                TextAsset jsonData = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
+                if (jsonData == null)
                 {
-                    AssetChanges.Add(changedAssets);
+                    Debug.LogWarning(string.Format("Expected [{0}] to not load as null", jsonFilter));
+                    return;
                 }
+
+                jsonData = new TextAsset(JsonConvert.SerializeObject(assetInfos));
+                AssetDatabase.CreateAsset(jsonData, path);
+                AssetDatabase.SaveAssets();
             }
         }
     }
