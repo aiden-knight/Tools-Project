@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using AssetProcessor = AidenK.CodeManager.CodeManagerAssetPostprocessor;
 
 namespace AidenK.CodeManager
 {
@@ -54,11 +55,26 @@ namespace AidenK.CodeManager
             }
             ScrollingContainerContent = scrollV.Q("unity-content-container");
 
-            List<GameObject> references = AssetFinder.FindReferences(serializedObject.targetObject);
-            foreach (GameObject obj in references)
+            List<Object> references = AssetProcessor.FindReferences(serializedObject.targetObject);
+            if(references == null)
             {
-                SetupButtonFromObject(obj);
+                List<GameObject> gameObjRefs = AssetFinder.FindReferences(serializedObject.targetObject);
+                foreach(GameObject obj in gameObjRefs)
+                {
+                   SetupButtonFromObject(obj);
+                }
             }
+            else
+            {
+                foreach (Object obj in references)
+                {
+                    if (obj is GameObject gameObj)
+                    {
+                        SetupButtonFromObject(gameObj);
+                    }
+                }
+            }
+            
 
             return root;
         }

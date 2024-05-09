@@ -8,6 +8,7 @@ using UnityEditor.SceneManagement;
 using System.IO;
 using Newtonsoft.Json;
 using System.Dynamic;
+using AssetProcessor = AidenK.CodeManager.CodeManagerAssetPostprocessor;
 
 namespace AidenK.CodeManager
 {
@@ -133,7 +134,7 @@ namespace AidenK.CodeManager
 
             // find scriptable objects in assets
 
-            bool jsonLoaded = CodeManagerAssetPostprocessor.CheckLoad();
+            bool jsonLoaded = AssetProcessor.CheckLoad();
             if (!jsonLoaded)
             {
                 List<AssetInfo> assetInfos = new List<AssetInfo>();
@@ -148,8 +149,8 @@ namespace AidenK.CodeManager
                         {
                             GUID = guid,
                             path = AssetDatabase.GUIDToAssetPath(guid),
-                            AssetReferencesGUIDs = new List<string>(),
-                            GameObjectInstanceIDs = new List<int>()
+                            AssetReferencesGUIDs = null,
+                            GameObjectInstanceIDs = null
                         };
                         SetupButton(assetInfo);
                         assetInfos.Add(assetInfo);
@@ -157,13 +158,13 @@ namespace AidenK.CodeManager
                 }
 
                 TextAsset jsonAsset = new TextAsset(JsonConvert.SerializeObject(assetInfos));
-                string path = CodeManagerAssetPostprocessor.jsonFolder[0] + CodeManagerAssetPostprocessor.jsonFileName;
+                string path = AssetProcessor.jsonFolder[0] + AssetProcessor.jsonFileName;
                 AssetDatabase.CreateAsset(jsonAsset, path);
                 AssetDatabase.SaveAssets();
             }
             else
             {
-                foreach(AssetInfo assetinfo in CodeManagerAssetPostprocessor.assetInfos)
+                foreach(AssetInfo assetinfo in AssetProcessor.assetInfos)
                 {
                     SetupButton(assetinfo);
                 }
@@ -183,7 +184,7 @@ namespace AidenK.CodeManager
             }
 
             ScrollingContainerContent.Sort(CompareByName);
-            CodeManagerAssetPostprocessor.ChangedAssets.Clear();
+            AssetProcessor.ChangedAssets.Clear();
         }
 
         // show asset's inspector and select it in assets folder
@@ -258,10 +259,10 @@ namespace AidenK.CodeManager
         // updates the scroll view container based off of changes to assets
         public void OnGUI()
         {
-            if(CodeManagerAssetPostprocessor.IsChanges())
+            if(AssetProcessor.IsChanges())
             {
                 // process asset changes
-                foreach((AssetChanges change, AssetInfo info) in CodeManagerAssetPostprocessor.ChangedAssets)
+                foreach((AssetChanges change, AssetInfo info) in AssetProcessor.ChangedAssets)
                 {
                     switch(change)
                     {
@@ -278,7 +279,7 @@ namespace AidenK.CodeManager
                 }
 
                 ScrollingContainerContent.Sort(CompareByName);
-                CodeManagerAssetPostprocessor.ChangedAssets.Clear();
+                AssetProcessor.ChangedAssets.Clear();
             }
         }
     }

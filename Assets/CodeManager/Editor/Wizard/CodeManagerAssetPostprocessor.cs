@@ -72,6 +72,73 @@ namespace AidenK.CodeManager
             return true;
         }
 
+        public static void SaveChanges()
+        {
+            string[] guids = AssetDatabase.FindAssets(jsonFilter, jsonFolder);
+            if (guids.Length == 0)
+            {
+                Debug.LogWarning(string.Format("Expected [{0}] to exist in folder: {1}", jsonFilter, jsonFolder[0]));
+                return;
+            }
+
+            string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+            TextAsset jsonData = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
+            if (jsonData == null)
+            {
+                Debug.LogWarning(string.Format("Expected [{0}] to not load as null", jsonFilter));
+                return;
+            }
+
+            jsonData = new TextAsset(JsonConvert.SerializeObject(assetInfos));
+            AssetDatabase.CreateAsset(jsonData, path);
+            AssetDatabase.SaveAssets();
+        }
+
+        public static List<Object> FindReferences(Object obj)
+        {
+            string assetGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(obj));
+
+            AssetInfo assetInfo = assetInfos.FirstOrDefault(info => info.GUID == assetGUID);
+            if (assetInfo == null) return null;
+            if (assetInfo.AssetReferencesGUIDs == null || assetInfo.GameObjectInstanceIDs == null) return null;
+
+            List<Object> references = new List<Object>();
+            foreach(string guid in assetInfo.AssetReferencesGUIDs)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                references.Add(AssetDatabase.LoadAssetAtPath<Object>(path));
+            }
+            foreach(int instanceID in assetInfo.GameObjectInstanceIDs)
+            {
+                references.Add(EditorUtility.InstanceIDToObject(instanceID));
+            }
+
+            return references;
+        }
+
+        public static void UpdateReferences(List<GameObject> objects, List<GameObject> prefabs, string assetGUID)
+        {
+            AssetInfo assetInfo = assetInfos.FirstOrDefault(info => info.GUID == assetGUID);
+            if (assetInfo == null) return;
+
+            List<string> prefabGUIDS = new List<string>();
+            foreach(GameObject prefab in prefabs)
+            {
+                string prefabGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(prefab));
+                prefabGUIDS.Add(prefabGUID);
+            }
+
+            List<int> instanceIDs = new List<int>();
+            foreach(GameObject obj in objects)
+            {
+                instanceIDs.Add(obj.GetInstanceID());
+            }
+
+            assetInfo.AssetReferencesGUIDs = prefabGUIDS;
+            assetInfo.GameObjectInstanceIDs = instanceIDs;
+            SaveChanges();
+        }
+
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
             bool jsonLoaded = CheckLoad();
@@ -113,8 +180,8 @@ namespace AidenK.CodeManager
                     {
                         GUID = guid,
                         path = path,
-                        AssetReferencesGUIDs = new List<string>(),
-                        GameObjectInstanceIDs = new List<int>()
+                        AssetReferencesGUIDs = null,
+                        GameObjectInstanceIDs = null
                     };
                     ChangedAssets.Add((AssetChanges.Created, info));
                     assetInfos.Add(info);
@@ -153,24 +220,7 @@ namespace AidenK.CodeManager
 
             if (changes)
             {
-                string[] guids = AssetDatabase.FindAssets(jsonFilter, jsonFolder);
-                if (guids.Length == 0)
-                {
-                    Debug.LogWarning(string.Format("Expected [{0}] to exist in folder: {1}", jsonFilter, jsonFolder[0]));
-                    return;
-                }
-
-                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-                TextAsset jsonData = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
-                if (jsonData == null)
-                {
-                    Debug.LogWarning(string.Format("Expected [{0}] to not load as null", jsonFilter));
-                    return;
-                }
-
-                jsonData = new TextAsset(JsonConvert.SerializeObject(assetInfos));
-                AssetDatabase.CreateAsset(jsonData, path);
-                AssetDatabase.SaveAssets();
+                SaveChanges();
             }
         }
     }

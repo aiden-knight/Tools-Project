@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using AssetProcessor = AidenK.CodeManager.CodeManagerAssetPostprocessor;
 
 namespace AidenK.CodeManager
 {
@@ -12,6 +13,8 @@ namespace AidenK.CodeManager
         public static List<GameObject> FindReferences(Object toFind)
         {
             List<GameObject> objects = new();
+            List<GameObject> prefabs = new();
+            string assetGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(toFind));
 
             // All game objects in all scenes and 
             foreach (GameObject obj in Resources.FindObjectsOfTypeAll<GameObject>().ToArray())
@@ -41,12 +44,18 @@ namespace AidenK.CodeManager
 
                     if (found)
                     {
-                        objects.Add(obj);
+                        if (obj.scene.name != null)
+                            objects.Add(obj);
+                        else
+                            prefabs.Add(obj);
                         break;
                     }
                 }
             }
 
+            AssetProcessor.UpdateReferences(objects, prefabs, assetGUID);
+
+            objects.AddRange(prefabs);
             return objects;
         }
     }
