@@ -10,45 +10,48 @@ namespace AidenK.CodeManager
 {
         public static class AssetFinder
     {
-        public static List<GameObject> FindReferences(Object toFind)
+        public static List<Object> FindReferences(Object toFind)
         {
-            List<GameObject> objects = new();
-            List<GameObject> prefabs = new();
+            List<Object> objects = new();
+            List<Object> prefabs = new();
             string assetGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(toFind));
 
             // All game objects in all scenes and 
-            foreach (GameObject obj in Resources.FindObjectsOfTypeAll<GameObject>().ToArray())
+            foreach (Object obj in Resources.FindObjectsOfTypeAll<Object>().ToArray())
             {
-                Component[] componentsArray = obj.GetComponents<Component>();
-                foreach (Component component in componentsArray)
+                if (obj is GameObject gameObj)
                 {
-                    if (component == null) continue;
-
-                    SerializedObject serializedObject = new SerializedObject(component);
-                    SerializedProperty iterator = serializedObject.GetIterator();
-
-                    bool found = false;
-                    while (iterator.NextVisible(true))
+                    Component[] componentsArray = gameObj.GetComponents<Component>();
+                    foreach (Component component in componentsArray)
                     {
-                        if (iterator.propertyType != SerializedPropertyType.ObjectReference)
+                        if (component == null) continue;
+
+                        SerializedObject serializedObject = new SerializedObject(component);
+                        SerializedProperty iterator = serializedObject.GetIterator();
+
+                        bool found = false;
+                        while (iterator.NextVisible(true))
                         {
-                            continue;
+                            if (iterator.propertyType != SerializedPropertyType.ObjectReference)
+                            {
+                                continue;
+                            }
+
+                            if (iterator.objectReferenceValue == toFind)
+                            {
+                                found = true;
+                                break;
+                            }
                         }
 
-                        if (iterator.objectReferenceValue == toFind)
+                        if (found)
                         {
-                            found = true;
+                            if (gameObj.scene.name != null)
+                                objects.Add(obj);
+                            else
+                                prefabs.Add(obj);
                             break;
                         }
-                    }
-
-                    if (found)
-                    {
-                        if (obj.scene.name != null)
-                            objects.Add(obj);
-                        else
-                            prefabs.Add(obj);
-                        break;
                     }
                 }
             }

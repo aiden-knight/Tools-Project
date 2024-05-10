@@ -150,7 +150,7 @@ namespace AidenK.CodeManager
                             GUID = guid,
                             path = AssetDatabase.GUIDToAssetPath(guid),
                             AssetReferencesGUIDs = null,
-                            GameObjectInstanceIDs = null
+                            SceneObjectReferences = null
                         };
                         SetupButton(assetInfo);
                         assetInfos.Add(assetInfo);

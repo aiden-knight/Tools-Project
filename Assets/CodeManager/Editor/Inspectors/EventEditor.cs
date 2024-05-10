@@ -9,75 +9,20 @@ using UnityEngine.UIElements;
 namespace AidenK.CodeManager
 {
     [CustomEditor(typeof(ScriptObjEventBase), true)]
-    public class EventEditor: Editor
+    public class EventEditor: ScriptObjEditor
     {
-        [SerializeField]
-        VisualTreeAsset ReferencesEditor = null;
-        VisualElement ScrollingContainerContent;
-        public void SelectObject(ClickEvent evt, GameObject obj)
-        {
-            Selection.activeObject = obj;
-            EditorApplication.ExecuteMenuItem("Window/General/Inspector");
-            EditorGUIUtility.PingObject(obj);
-        }
-
-        void SetupButtonFromObject(GameObject obj)
-        {
-            Button button = new Button();
-
-            string name;
-            if (obj.scene.name != null)
-            {
-                name = "Scene ("+ obj.scene.name + "): ";
-            }
-            else
-            {
-                name = "Prefab: ";
-            }
-            name += "[" + obj.name + "]";
-            button.text = name;
-            button.name = name;
-            //button.styleSheets.Add(uss);
-            button.RegisterCallback<ClickEvent, GameObject>(SelectObject, obj);
-            ScrollingContainerContent.Add(button);
-        }
-
         void TriggerInvoke(ClickEvent evt)
         {
             ScriptObjEventBase objAsBase = serializedObject.targetObject as ScriptObjEventBase;
             objAsBase.CallInvoke.Invoke();
         }
 
-        public override VisualElement CreateInspectorGUI()
+        protected override VisualElement ExtraContent()
         {
-            VisualElement root = new VisualElement();
-            root.Add(new IMGUIContainer(OnInspectorGUI));
-
             Button button = new Button();
             button.text = "Fire Event (Play Mode Only)";
             button.RegisterCallback<ClickEvent>(TriggerInvoke);
-            root.Add(button);
-
-            VisualElement uxmlElement = ReferencesEditor.Instantiate();
-            root.Add(uxmlElement);
-
-            var scrollV = root.Q<ScrollView>("References");
-            ScrollingContainerContent = scrollV.Q("unity-content-container");
-
-            List<GameObject> references = AssetFinder.FindReferences(serializedObject.targetObject);
-            foreach (GameObject obj in references)
-            {
-                SetupButtonFromObject(obj);
-            }
-
-            
-
-            return root;
-        }
-
-        public override void OnInspectorGUI()
-        {
-            DrawDefaultInspector();
+            return button;
         }
     }
 }

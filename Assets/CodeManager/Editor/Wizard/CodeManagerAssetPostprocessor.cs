@@ -6,9 +6,17 @@ using UnityEngine;
 using Newtonsoft.Json;
 using Codice.Client.BaseCommands.BranchExplorer;
 using System.IO;
+using System.Reflection;
 
 namespace AidenK.CodeManager
 {
+    [System.Serializable]
+    public class SceneObjectReference
+    {
+        public string sceneGUID;
+        public List<int> IndexesFromRoot;
+    }
+
     /// <summary>Asset info for scriptable object types</summary> 
     [System.Serializable]
     public class AssetInfo
@@ -26,12 +34,10 @@ namespace AidenK.CodeManager
         /// </summary>
         public List<string> AssetReferencesGUIDs;
         /// <summary>
-        /// Instance IDs of game objects in scenes that reference asset
+        /// Scene object reference for objects in scene that have reference to the asset
         /// </summary>
-        public List<int> GameObjectInstanceIDs;
+        public List<SceneObjectReference> SceneObjectReferences;
     }
-    // https://stackoverflow.com/questions/70782260/unique-unchanged-identifier-for-gameobject-in-unity
-    // Instance IDs not saved between editor sessions / play mode
 
     public enum AssetChanges
     {
@@ -96,48 +102,38 @@ namespace AidenK.CodeManager
             AssetDatabase.SaveAssets();
         }
 
-        public static List<Object> FindReferences(Object obj)
+        public static AssetInfo GetReferences(Object obj)
         {
             string assetGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(obj));
 
             AssetInfo assetInfo = assetInfos.FirstOrDefault(info => info.GUID == assetGUID);
             if (assetInfo == null) return null;
-            if (assetInfo.AssetReferencesGUIDs == null || assetInfo.GameObjectInstanceIDs == null) return null;
-
-            List<Object> references = new List<Object>();
-            foreach(string guid in assetInfo.AssetReferencesGUIDs)
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                references.Add(AssetDatabase.LoadAssetAtPath<Object>(path));
-            }
-            foreach(int instanceID in assetInfo.GameObjectInstanceIDs)
-            {
-                references.Add(EditorUtility.InstanceIDToObject(instanceID));
-            }
-
-            return references;
+            if (assetInfo.AssetReferencesGUIDs == null || assetInfo.SceneObjectReferences == null) return null;
+            return assetInfo;
         }
 
-        public static void UpdateReferences(List<GameObject> objects, List<GameObject> prefabs, string assetGUID)
+        public static void UpdateReferences(List<Object> objects, List<Object> prefabs, string assetGUID)
         {
             AssetInfo assetInfo = assetInfos.FirstOrDefault(info => info.GUID == assetGUID);
             if (assetInfo == null) return;
 
             List<string> prefabGUIDS = new List<string>();
-            foreach(GameObject prefab in prefabs)
+            foreach(Object prefab in prefabs)
             {
                 string prefabGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(prefab));
                 prefabGUIDS.Add(prefabGUID);
             }
 
-            List<int> instanceIDs = new List<int>();
-            foreach(GameObject obj in objects)
+            List<SceneObjectReference> sceneObjectReferences = new List<SceneObjectReference>();
+            List<int> indexesFromRoot = new List<int>();
+            foreach(Object obj in objects)
             {
-                instanceIDs.Add(obj.GetInstanceID());
+                indexesFromRoot.Add(obj.GetInstanceID());
             }
 
+            sceneObjectReferences.Add(new SceneObjectReference() { sceneGUID = string.Empty, IndexesFromRoot = indexesFromRoot});
             assetInfo.AssetReferencesGUIDs = prefabGUIDS;
-            assetInfo.GameObjectInstanceIDs = instanceIDs;
+            assetInfo.SceneObjectReferences = sceneObjectReferences;
             SaveChanges();
         }
 
@@ -183,7 +179,7 @@ namespace AidenK.CodeManager
                         GUID = guid,
                         path = path,
                         AssetReferencesGUIDs = null,
-                        GameObjectInstanceIDs = null
+                        SceneObjectReferences = null
                     };
                     ChangedAssets.Add((AssetChanges.Created, info));
                     assetInfos.Add(info);
