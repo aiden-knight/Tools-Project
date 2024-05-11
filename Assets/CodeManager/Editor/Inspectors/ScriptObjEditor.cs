@@ -1,8 +1,11 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UIElements;
 using AssetProcessor = AidenK.CodeManager.CodeManagerAssetPostprocessor;
+using Scene = UnityEngine.SceneManagement.Scene;
 
 namespace AidenK.CodeManager
 {
@@ -11,34 +14,59 @@ namespace AidenK.CodeManager
         [SerializeField]
         VisualTreeAsset ReferencesEditor = null;
         VisualElement ScrollingContainerContent;
+
+        public void SelectObjectWithInspector(ClickEvent evt, Object obj)
+        {
+            SelectObject(evt, obj);
+            EditorApplication.ExecuteMenuItem("Window/General/Inspector");
+        }
+
         public void SelectObject(ClickEvent evt, Object obj)
         {
             Selection.activeObject = obj;
-            EditorApplication.ExecuteMenuItem("Window/General/Inspector");
+            EditorUtility.FocusProjectWindow();
             EditorGUIUtility.PingObject(obj);
         }
 
-        void SetupButtonFromObject(Object obj)
+        void SetupButtonFromObject(string scenePath, string objectName)
+        {
+            Button button = new Button();
+
+            string name = scenePath.Substring("Assets/".Length);
+            name += " [" + objectName + "]";
+            button.text = name;
+            button.name = objectName;
+            button.RegisterCallback<ClickEvent, Object>(SelectObject, AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath));
+            ScrollingContainerContent.Add(button);
+        }
+
+        void SetupButtonFromSceneObject(Object obj)
         {
             Button button = new Button();
 
             string name;
             if (obj is GameObject gameObj)
             {
-                if(gameObj.scene.name != null)
-                {
-                    name = "Scene: ";
-                }
-                else
-                {
-                    name = "Prefab: ";
-                }
+                name = string.Format("{0} ", gameObj.scene.name);
             }
             else
             {
-                name = "Unknown: ";
+                return;
             }
+
             name += "[" + obj.name + "]";
+            button.text = name;
+            button.name = obj.name;
+            button.RegisterCallback<ClickEvent, Object>(SelectObjectWithInspector, obj);
+            ScrollingContainerContent.Add(button);
+        }
+
+        void SetupButtonFromPrefab(string path)
+        {
+            GameObject obj = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            Button button = new Button();
+
+            string name = path.Substring("Assets/".Length);
             button.text = name;
             button.name = obj.name;
             button.RegisterCallback<ClickEvent, Object>(SelectObject, obj);
@@ -69,34 +97,57 @@ namespace AidenK.CodeManager
             }
             ScrollingContainerContent = scrollV.Q("unity-content-container");
 
+            // get references from json
             AssetInfo assetInfo = AssetProcessor.GetReferences(serializedObject.targetObject);
-            if(assetInfo!= null)
+            if(assetInfo == null)
             {
-                List<Object> references = new List<Object>();
+                // if couldn't find references try and generate them
+                AssetFinder.FindReferences(serializedObject.targetObject);
+                assetInfo = AssetProcessor.GetReferences(serializedObject.targetObject);
+            }
+
+            if(assetInfo != null)
+            {
+                // for each prefab
                 foreach (string guid in assetInfo.AssetReferencesGUIDs)
                 {
                     string path = AssetDatabase.GUIDToAssetPath(guid);
-                    references.Add(AssetDatabase.LoadAssetAtPath<Object>(path));
-                }
-                foreach (SceneObjectReference instanceID in assetInfo.SceneObjectReferences)
-                {
-                    
+                    SetupButtonFromPrefab(path);
                 }
 
-                foreach (Object obj in references)
+                // get active scenes
+                List<string> activeScenePaths = new List<string>();
+                for(int i = 0; i < EditorSceneManager.sceneCount; i++)
                 {
-                    SetupButtonFromObject(obj);
+                    Scene scene = EditorSceneManager.GetSceneAt(i);
+                    activeScenePaths.Add(scene.path);
                 }
-            }
-            else
-            {
-                List<Object> gameObjRefs = AssetFinder.FindReferences(serializedObject.targetObject);
-                foreach (Object obj in gameObjRefs)
+                // for each game object in scenes
+                foreach (SceneObjectReference objectReference in assetInfo.SceneObjectReferences)
                 {
-                    SetupButtonFromObject(obj);
-                }
-            }
+                    string path = AssetDatabase.GUIDToAssetPath(objectReference.SceneGUID);
+                    int sceneIndex = activeScenePaths.IndexOf(path);
+                    if (sceneIndex == -1) // if object not in an active scene
+                    {
+                        SetupButtonFromObject(path, objectReference.ObjectName);
+                        continue;
+                    }
 
+                    // object is in active scene so find it to reference
+                    Scene scene = EditorSceneManager.GetSceneAt(sceneIndex);
+                    Transform transform = null;
+                    foreach(int index in objectReference.IndexesFromRoot)
+                    {
+                        if (transform == null)
+                            transform = scene.GetRootGameObjects()[index].transform;
+                        else
+                            transform = transform.GetChild(index);
+                    }
+
+                    SetupButtonFromSceneObject(transform.gameObject);
+                }
+            }
+            ScrollingContainerContent.Sort(CodeManagerWizard.CompareByName);
 
             return root;
         }

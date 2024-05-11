@@ -13,7 +13,8 @@ namespace AidenK.CodeManager
     [System.Serializable]
     public class SceneObjectReference
     {
-        public string sceneGUID;
+        public string ObjectName;
+        public string SceneGUID;
         public List<int> IndexesFromRoot;
     }
 
@@ -24,7 +25,7 @@ namespace AidenK.CodeManager
         /// <summary>
         /// path to the asset
         /// </summary>
-        public string path;
+        public string Path;
         /// <summary>
         /// Globally unique identifier of the asset
         /// </summary>
@@ -112,27 +113,12 @@ namespace AidenK.CodeManager
             return assetInfo;
         }
 
-        public static void UpdateReferences(List<Object> objects, List<Object> prefabs, string assetGUID)
+        public static void UpdateReferences(List<string> prefabs, List<SceneObjectReference> sceneObjectReferences, string assetGUID)
         {
             AssetInfo assetInfo = assetInfos.FirstOrDefault(info => info.GUID == assetGUID);
             if (assetInfo == null) return;
 
-            List<string> prefabGUIDS = new List<string>();
-            foreach(Object prefab in prefabs)
-            {
-                string prefabGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(prefab));
-                prefabGUIDS.Add(prefabGUID);
-            }
-
-            List<SceneObjectReference> sceneObjectReferences = new List<SceneObjectReference>();
-            List<int> indexesFromRoot = new List<int>();
-            foreach(Object obj in objects)
-            {
-                indexesFromRoot.Add(obj.GetInstanceID());
-            }
-
-            sceneObjectReferences.Add(new SceneObjectReference() { sceneGUID = string.Empty, IndexesFromRoot = indexesFromRoot});
-            assetInfo.AssetReferencesGUIDs = prefabGUIDS;
+            assetInfo.AssetReferencesGUIDs = prefabs;
             assetInfo.SceneObjectReferences = sceneObjectReferences;
             SaveChanges();
         }
@@ -177,7 +163,7 @@ namespace AidenK.CodeManager
                     AssetInfo info = new AssetInfo()
                     {
                         GUID = guid,
-                        path = path,
+                        Path = path,
                         AssetReferencesGUIDs = null,
                         SceneObjectReferences = null
                     };
@@ -209,7 +195,7 @@ namespace AidenK.CodeManager
 
                 if (info != null)
                 {
-                    info.path = movedAssets[i];
+                    info.Path = movedAssets[i];
                     ChangedAssets.Add((AssetChanges.Moved, info));
                     changes = true;
                 }

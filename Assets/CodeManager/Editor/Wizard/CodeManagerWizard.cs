@@ -48,7 +48,7 @@ namespace AidenK.CodeManager
         void SetupButton(AssetInfo info)
         {
             Button button = new Button();
-            button.text = info.path.Substring("Assets/".Length);
+            button.text = info.Path.Substring("Assets/".Length);
             button.name = info.GUID;
             button.styleSheets.Add(uss);
             button.RegisterCallback<ClickEvent, string>(SelectAssetCallback, info.GUID);
@@ -148,7 +148,7 @@ namespace AidenK.CodeManager
                         AssetInfo assetInfo = new AssetInfo
                         {
                             GUID = guid,
-                            path = AssetDatabase.GUIDToAssetPath(guid),
+                            Path = AssetDatabase.GUIDToAssetPath(guid),
                             AssetReferencesGUIDs = null,
                             SceneObjectReferences = null
                         };
@@ -213,7 +213,7 @@ namespace AidenK.CodeManager
         }
 
         // compares visual elements by name to sort the scroll view
-        static int CompareByName(VisualElement first, VisualElement second)
+        public static int CompareByName(VisualElement first, VisualElement second)
         {
             Button firstAsButton = first as Button;
             Button secondAsButton = second as Button;
@@ -252,7 +252,7 @@ namespace AidenK.CodeManager
 
             if (moved is Button button)
             {
-                button.text = assetInfo.path.Substring("Assets/".Length);
+                button.text = assetInfo.Path.Substring("Assets/".Length);
             }
         }
 
