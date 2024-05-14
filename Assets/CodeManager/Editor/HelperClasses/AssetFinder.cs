@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using AssetProcessor = AidenK.CodeManager.CodeManagerAssetPostprocessor;
 using Scene = UnityEngine.SceneManagement.Scene;
 
 namespace AidenK.CodeManager

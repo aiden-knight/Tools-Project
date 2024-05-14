@@ -4,9 +4,6 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using Newtonsoft.Json;
-using Codice.Client.BaseCommands.BranchExplorer;
-using System.IO;
-using System.Reflection;
 
 namespace AidenK.CodeManager
 {
@@ -47,9 +44,10 @@ namespace AidenK.CodeManager
         Moved
     }
 
-
-    // Handles the moving, deleting, renaming and creation of assets
-    public class CodeManagerAssetPostprocessor : AssetPostprocessor
+    /// <summary>
+    /// Tracks assets and their changes
+    /// </summary>
+    internal class AssetTracker : AssetPostprocessor
     {
         /// <summary> List of asset changes, contains type of change and asset info of asset it refers to </summary>
         public static List<(AssetChanges, AssetInfo)> ChangedAssets = new List<(AssetChanges, AssetInfo)>();
@@ -58,24 +56,38 @@ namespace AidenK.CodeManager
             return ChangedAssets.Count > 0;
         }
 
+        // Values to use when attempting to reference the json file
         public const string jsonFilter = "AidenK.CodeManager.AssetInfo t:TextAsset";
         public const string jsonFileName = "AidenK.CodeManager.AssetInfo.asset";
         public static readonly string[] jsonFolder = { "Assets/AidenK.CodeManager/Settings/" };
 
         /// <summary> List of all scriptable object's asset info </summary>
         public static List<AssetInfo> AssetInfos = new List<AssetInfo>();
+
+        public static bool FindingAssetReferences = false;
+
         /// <summary> Whether AssetInfos have been loaded </summary>
-        static bool loaded = false;
+        private static bool loaded = false;
 
         /// <summary> Array of types that the processor should watch for </summary>
-        static readonly Type[] watchedTypes =
+        private static readonly Type[] WatchedTypes =
             {
                 typeof(ScriptObjVariableBase),
                 typeof(ScriptObjEventBase),
                 typeof(ScriptObjCollectionBase),
+                typeof(SceneAsset),
+                typeof(GameObject),
             };
+        // must have same order as above array
+        private enum TypeIndex
+        {
+            Untracked = -1,
+            ScriptObj = 1,
+            ScriptObjEnd = 2,
+            Scene,
+            Prefab,
+        }
 
-        
         /// <summary>
         /// Checks whether json is loaded or attemps to load
         /// </summary>
@@ -135,39 +147,33 @@ namespace AidenK.CodeManager
             AssetInfo assetInfo = AssetInfos.FirstOrDefault(info => info.GUID == assetGUID);
             return assetInfo;
         }
-        
-        static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
+
+        private static TypeIndex GetType(string path)
         {
-            bool jsonLoaded = CheckLoad();
-            if(!jsonLoaded)
+            Type assetType = AssetDatabase.GetMainAssetTypeAtPath(path);
+            for (int index = 0; index < WatchedTypes.Length; index++)
             {
-                Debug.Log("Cancelled OnPostProcess as json file not loaded");
-                return;
-            }
-            bool changes = false;
-            
-            // types to check for
-            
-
-            // created or modified assets (occurs when assets have moved)
-            foreach (string path in importedAssets)
-            {
-                string guid = AssetDatabase.AssetPathToGUID(path);
-                Type type = AssetDatabase.GetMainAssetTypeAtPath(path);
-
-                bool isOfWatchedType = false;
-                foreach (Type watchedType in watchedTypes)
+                if (index <= ((int)TypeIndex.ScriptObjEnd) && assetType.IsSubclassOf(WatchedTypes[index]))
                 {
-                    if(type.IsSubclassOf(watchedType))
-                    {
-                        isOfWatchedType = true;
-                        break;
-                    }
+                    return TypeIndex.ScriptObj;
                 }
-
-                // check performance of this vs foreach to determine order
-                if(isOfWatchedType && !AssetInfos.Any(info => info.GUID == guid))
+                else if (assetType == WatchedTypes[index])
                 {
+                    return (TypeIndex)index;
+                }
+            }
+            return TypeIndex.Untracked;
+        }
+
+        private static void HandleImported(string path)
+        {
+            string guid = AssetDatabase.AssetPathToGUID(path);
+            TypeIndex type = GetType(path);
+
+            switch (type)
+            {
+                case TypeIndex.ScriptObj: // If type is scriptable object add if doesn't exist
+                    if (AssetInfos.Any(info => info.GUID == guid)) return;
                     AssetInfo info = new AssetInfo()
                     {
                         GUID = guid,
@@ -177,43 +183,119 @@ namespace AidenK.CodeManager
                     };
                     ChangedAssets.Add((AssetChanges.Created, info));
                     AssetInfos.Add(info);
-                    changes = true;
-                }
+                    break;
+
+                default:
+                    return;
             }
+            changes = true;
+        }
 
-            // any assets deleted
-            foreach (string str in deletedAssets)
+        // Handle created or modified assets (also occurs when assets have moved)
+        public static void HandleAllImported(string[] importedAssets)
+        {
+            foreach (string path in importedAssets)
             {
-                string guid = AssetDatabase.AssetPathToGUID(str);
-                AssetInfo info = AssetInfos.FirstOrDefault(info => info.GUID == guid);
+                HandleImported(path);
+            }
+        }
 
-                if (info != null)
-                {
+        // Handles deleted assets
+        public static void HandleDeleted(string path)
+        {
+            string guid = AssetDatabase.AssetPathToGUID(path);
+            TypeIndex type = GetType(path);
+
+            switch (type)
+            {
+                case TypeIndex.ScriptObj:
+                    AssetInfo info = AssetInfos.FirstOrDefault(info => info.GUID == guid);
+                    if (info == null) return;
+
                     ChangedAssets.Add((AssetChanges.Deleted, info));
                     AssetInfos.Remove(info);
-                    changes = true;
-                }
+                    break;
+
+                default:
+                    return;
             }
 
-            // any assets that have moved in assets
-            for (int i = 0; i < movedAssets.Length; i++)
+            changes = true;
+        }
+
+        private static void HandleMoved(string path)
+        {
+            string guid = AssetDatabase.AssetPathToGUID(path);
+            TypeIndex type = GetType(path);
+
+            switch (type)
             {
-                string guid = AssetDatabase.AssetPathToGUID(movedAssets[i]);
-                AssetInfo info = AssetInfos.FirstOrDefault(info => info.GUID == guid);
+                case TypeIndex.ScriptObj:
+                    AssetInfo info = AssetInfos.FirstOrDefault(info => info.GUID == guid);
+                    if (info == null) return;
 
-                if (info != null)
-                {
-                    info.Path = movedAssets[i];
+                    info.Path = path;
                     ChangedAssets.Add((AssetChanges.Moved, info));
-                    changes = true;
-                }
+                    break;
+
+                default:
+                    return;
             }
 
+            changes = true;
+        }
 
+        // Handles any moved assets
+        private static void HandleAllMoved(string[] movedAssets)
+        {
+            foreach (string path in movedAssets)
+            {
+                HandleMoved(path);
+            }
+        }
+
+        // Whether there was changes
+        static bool changes = false;
+        // When inheriting from AssetPostprocessor, implementing this function captures changes to assets
+        private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
+        {
+            bool jsonLoaded = CheckLoad();
+            if(!jsonLoaded)
+            {
+                Debug.Log("Cancelled OnPostprocess as json file not loaded");
+                return;
+            }
+
+            HandleAllImported(importedAssets);
+            HandleAllMoved(movedAssets);
+            
             if (changes)
             {
                 SaveChanges();
+                changes = false;
             }
+        }
+    }
+
+    public class AssetModifier : AssetModificationProcessor
+    {
+        private static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions opt)
+        {
+            AssetTracker.HandleDeleted(path);
+            return AssetDeleteResult.DidNotDelete;
+        }
+
+        private static string[] OnWillSaveAssets(string[] paths)
+        {
+            if(!AssetTracker.FindingAssetReferences)
+            {
+                foreach (string path in paths)
+                {
+                    Debug.Log(path);
+                }
+            }
+            
+            return paths;
         }
     }
 }

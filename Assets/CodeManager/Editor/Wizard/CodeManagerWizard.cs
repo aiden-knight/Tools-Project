@@ -3,11 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEditor.SceneManagement;
-using System.IO;
 using Newtonsoft.Json;
-using System.Dynamic;
-using AssetProcessor = AidenK.CodeManager.CodeManagerAssetPostprocessor;
 using Enum = System.Enum;
 
 namespace AidenK.CodeManager
@@ -44,7 +40,9 @@ namespace AidenK.CodeManager
         }
 
 
-        // Given the info of a scriptable object asset, creates a button to select it
+        /// <summary>
+        /// Given the info of a scriptable object asset, creates a button to select it
+        /// </summary>
         void SetupButton(AssetInfo info)
         {
             Button button = new Button();
@@ -75,7 +73,8 @@ namespace AidenK.CodeManager
         void FindAllReferences(ClickEvent evt)
         {
             Deselect();
-            foreach(AssetInfo info in AssetProcessor.AssetInfos)
+            AssetTracker.FindingAssetReferences = true;
+            foreach(AssetInfo info in AssetTracker.AssetInfos)
             {
                 Object obj = AssetDatabase.LoadAssetAtPath<Object>(AssetDatabase.GUIDToAssetPath(info.GUID));
                 (List<string> prefabGUIDs, List<SceneObjectReference> sceneRefs) = AssetFinder.FindReferences(obj);
@@ -84,7 +83,8 @@ namespace AidenK.CodeManager
                 info.SceneObjectReferences = sceneRefs;
             }
 
-            AssetProcessor.SaveChanges();
+            AssetTracker.SaveChanges();
+            AssetTracker.FindingAssetReferences = false;
         }
 
         void ClassTypeChanged(ChangeEvent<string> evt)
@@ -149,7 +149,7 @@ namespace AidenK.CodeManager
             GenerateType.RegisterValueChangedCallback(GenerateTypeChanged);
 
             // find scriptable objects in assets
-            bool jsonLoaded = AssetProcessor.CheckLoad();
+            bool jsonLoaded = AssetTracker.CheckLoad();
             if (!jsonLoaded)
             {
                 List<AssetInfo> assetInfos = new List<AssetInfo>();
@@ -173,13 +173,13 @@ namespace AidenK.CodeManager
                 }
 
                 TextAsset jsonAsset = new TextAsset(JsonConvert.SerializeObject(assetInfos));
-                string path = AssetProcessor.jsonFolder[0] + AssetProcessor.jsonFileName;
+                string path = AssetTracker.jsonFolder[0] + AssetTracker.jsonFileName;
                 AssetDatabase.CreateAsset(jsonAsset, path);
                 AssetDatabase.SaveAssets();
             }
             else
             {
-                foreach(AssetInfo assetinfo in AssetProcessor.AssetInfos)
+                foreach(AssetInfo assetinfo in AssetTracker.AssetInfos)
                 {
                     SetupButton(assetinfo);
                 }
@@ -199,7 +199,7 @@ namespace AidenK.CodeManager
             }
 
             ScrollingContainerContent.Sort(CompareByName);
-            AssetProcessor.ChangedAssets.Clear();
+            AssetTracker.ChangedAssets.Clear();
         }
 
         // show asset's inspector and select it in assets folder
@@ -274,10 +274,10 @@ namespace AidenK.CodeManager
         // updates the scroll view container based off of changes to assets
         public void OnGUI()
         {
-            if(AssetProcessor.IsChanges())
+            if(AssetTracker.IsChanges())
             {
                 // process asset changes
-                foreach((AssetChanges change, AssetInfo info) in AssetProcessor.ChangedAssets)
+                foreach((AssetChanges change, AssetInfo info) in AssetTracker.ChangedAssets)
                 {
                     switch(change)
                     {
@@ -294,7 +294,7 @@ namespace AidenK.CodeManager
                 }
 
                 ScrollingContainerContent.Sort(CompareByName);
-                AssetProcessor.ChangedAssets.Clear();
+                AssetTracker.ChangedAssets.Clear();
             }
         }
     }

@@ -4,7 +4,6 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UIElements;
-using AssetProcessor = AidenK.CodeManager.CodeManagerAssetPostprocessor;
 using Scene = UnityEngine.SceneManagement.Scene;
 
 namespace AidenK.CodeManager
@@ -98,7 +97,7 @@ namespace AidenK.CodeManager
             ScrollingContainerContent = scrollV.Q("unity-content-container");
 
             // get references from json
-            AssetInfo assetInfo = AssetProcessor.GetAssetInfo(serializedObject.targetObject);
+            AssetInfo assetInfo = AssetTracker.GetAssetInfo(serializedObject.targetObject);
             bool showReferences = assetInfo != null && assetInfo.AssetReferencesGUIDs != null && assetInfo.SceneObjectReferences != null;
             if(showReferences)
             {
