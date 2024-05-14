@@ -98,15 +98,9 @@ namespace AidenK.CodeManager
             ScrollingContainerContent = scrollV.Q("unity-content-container");
 
             // get references from json
-            AssetInfo assetInfo = AssetProcessor.GetReferences(serializedObject.targetObject);
-            if(assetInfo == null)
-            {
-                // if couldn't find references try and generate them
-                AssetFinder.FindReferences(serializedObject.targetObject);
-                assetInfo = AssetProcessor.GetReferences(serializedObject.targetObject);
-            }
-
-            if(assetInfo != null)
+            AssetInfo assetInfo = AssetProcessor.GetAssetInfo(serializedObject.targetObject);
+            bool showReferences = assetInfo != null && assetInfo.AssetReferencesGUIDs != null && assetInfo.SceneObjectReferences != null;
+            if(showReferences)
             {
                 // for each prefab
                 foreach (string guid in assetInfo.AssetReferencesGUIDs)
@@ -146,8 +140,9 @@ namespace AidenK.CodeManager
 
                     SetupButtonFromSceneObject(transform.gameObject);
                 }
+
+                ScrollingContainerContent.Sort(CodeManagerWizard.CompareByName);
             }
-            ScrollingContainerContent.Sort(CodeManagerWizard.CompareByName);
 
             return root;
         }

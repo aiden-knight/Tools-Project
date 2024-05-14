@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEditor;
@@ -9,6 +8,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Dynamic;
 using AssetProcessor = AidenK.CodeManager.CodeManagerAssetPostprocessor;
+using Enum = System.Enum;
 
 namespace AidenK.CodeManager
 {
@@ -72,6 +72,21 @@ namespace AidenK.CodeManager
         }
         void Deselect(ClickEvent evt) { Deselect(); }
 
+        void FindAllReferences(ClickEvent evt)
+        {
+            Deselect();
+            foreach(AssetInfo info in AssetProcessor.AssetInfos)
+            {
+                Object obj = AssetDatabase.LoadAssetAtPath<Object>(AssetDatabase.GUIDToAssetPath(info.GUID));
+                (List<string> prefabGUIDs, List<SceneObjectReference> sceneRefs) = AssetFinder.FindReferences(obj);
+
+                info.AssetReferencesGUIDs = prefabGUIDs;
+                info.SceneObjectReferences = sceneRefs;
+            }
+
+            AssetProcessor.SaveChanges();
+        }
+
         void ClassTypeChanged(ChangeEvent<string> evt)
         {
             wizardData.classType = ClassType.value;
@@ -97,6 +112,7 @@ namespace AidenK.CodeManager
 
             inspectorContainer = root.Q("Inspector");
 
+            root.Q<Button>("FindReferences").RegisterCallback<ClickEvent>(FindAllReferences);
             root.Q<Button>("DeselectScriptObj").RegisterCallback<ClickEvent>(Deselect);
             root.Q<Button>("Generate").RegisterCallback<ClickEvent>(GenerateClass);
 
@@ -133,7 +149,6 @@ namespace AidenK.CodeManager
             GenerateType.RegisterValueChangedCallback(GenerateTypeChanged);
 
             // find scriptable objects in assets
-
             bool jsonLoaded = AssetProcessor.CheckLoad();
             if (!jsonLoaded)
             {
@@ -164,7 +179,7 @@ namespace AidenK.CodeManager
             }
             else
             {
-                foreach(AssetInfo assetinfo in AssetProcessor.assetInfos)
+                foreach(AssetInfo assetinfo in AssetProcessor.AssetInfos)
                 {
                     SetupButton(assetinfo);
                 }

@@ -11,6 +11,10 @@ namespace AidenK.CodeManager
 {
     public static class AssetFinder
     {
+        /// <summary>
+        /// Loops over active scenes to return list of them
+        /// </summary>
+        /// <returns>List of the GUIDs of active scenes</returns>
         static List<string> GetActiveScenes()
         {
             List<string> activeScenesGUIDs = new List<string>();
@@ -25,6 +29,12 @@ namespace AidenK.CodeManager
             return activeScenesGUIDs;
         }
 
+        /// <summary>
+        /// Loops over the components in a game object to determine if it contains a reference to the object
+        /// </summary>
+        /// <param name="toFind">Object to find reference to</param>
+        /// <param name="gameObject">GameObject to look in</param>
+        /// <returns>Whether or not the gameobject was found</returns>
         static bool ReferenceInGameObject(Object toFind, GameObject gameObject)
         {
             // look for target object in component's serialized fields
@@ -51,6 +61,11 @@ namespace AidenK.CodeManager
             return false;
         }
 
+        /// <summary>
+        /// Checks all prefabs for a reference to the  object
+        /// </summary>
+        /// <param name="toFind">Object to find reference to</param>
+        /// <returns>List of the GUIDs of the prefabs that have references</returns>
         static List<string> GetPrefabReferences(Object toFind)
         {
             string[] allPrefabGUIDs = AssetDatabase.FindAssets("t:Prefab");
@@ -59,15 +74,31 @@ namespace AidenK.CodeManager
             foreach (string guid in allPrefabGUIDs)
             {
                 GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
-                
+
                 if(ReferenceInGameObject(toFind, prefab))
                 {
                     prefabGUIDs.Add(guid);
                 }
+                else
+                {
+                    foreach (Transform child in prefab.GetComponentsInChildren<Transform>())
+                    {
+                        if (ReferenceInGameObject(toFind, child.gameObject))
+                        {
+                            prefabGUIDs.Add(guid);
+                            break;
+                        }
+                    }
+                }                
             }
             return prefabGUIDs;
         }
 
+        /// <summary>
+        /// Loops over all objects in scene to check for references
+        /// </summary>
+        /// <param name="toFind">Object to find reference to</param>
+        /// <returns>List of the objects in scene that have references</returns>
         static List<Object> GetSceneReferences(Object toFind)
         {
             List<Object> references = new List<Object>();
@@ -89,9 +120,14 @@ namespace AidenK.CodeManager
             return references;
         }
 
+        /// <summary>
+        /// Converts list of scene objects to a list of scene object references
+        /// </summary>
+        /// <param name="sceneObjects">List of scene objects</param>
+        /// <returns>List of scene object references</returns>
         static List<SceneObjectReference> GetSceneObjectReferences(List<Object> sceneObjects)
         {
-            List<SceneObjectReference> sceneObjectReferences = new List<SceneObjectReference>();
+            List<SceneObjectReference> sceneObjectReferences = new List<SceneObjectReference>(sceneObjects.Count);
             foreach (Object obj in sceneObjects)
             {
                 GameObject gameObj = obj as GameObject;
@@ -119,28 +155,32 @@ namespace AidenK.CodeManager
             return sceneObjectReferences;
         }
 
-        public static void FindReferences(Object toFind)
+        /// <summary>
+        /// Slow function to generate all the references to an object to store it on the AssetPostprocessor
+        /// </summary>
+        /// <param name="toFind">Object to find</param>
+        public static (List<string>, List<SceneObjectReference>) FindReferences(Object toFind)
         {
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return (null, null);
 
             List<string> activeSceneGUIDs = GetActiveScenes();
 
             List<string> prefabGUIDS = GetPrefabReferences(toFind);
-            
+
             // find references in all scenes
             string[] sceneGUIDS = AssetDatabase.FindAssets("t:SceneAsset");
-            List<SceneObjectReference> sceneObjectReferences = new List<SceneObjectReference>();
-            foreach (string sceneGUID in sceneGUIDS)
+            OpenSceneMode mode = OpenSceneMode.Single;
+            foreach (string sceneGUID in sceneGUIDS) // open all scenes
             {
                 string path = AssetDatabase.GUIDToAssetPath(sceneGUID);
-                EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
-
-                List<Object> sceneObjects = GetSceneReferences(toFind);
-                sceneObjectReferences.AddRange(GetSceneObjectReferences(sceneObjects));
+                EditorSceneManager.OpenScene(path, mode);
+                mode = OpenSceneMode.Additive;
             }
+            List<Object> sceneObjects = GetSceneReferences(toFind);
+            List<SceneObjectReference> sceneObjectReferences = GetSceneObjectReferences(sceneObjects);
 
             // reopen previous active scenes
-            OpenSceneMode mode = OpenSceneMode.Single;
+            mode = OpenSceneMode.Single;
             foreach(string sceneGUID in activeSceneGUIDs)
             {
                 string path = AssetDatabase.GUIDToAssetPath(sceneGUID);
@@ -149,8 +189,7 @@ namespace AidenK.CodeManager
                 mode = OpenSceneMode.Additive;
             }
 
-            string assetGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(toFind));
-            AssetProcessor.UpdateReferences(prefabGUIDS, sceneObjectReferences, assetGUID);
+            return (prefabGUIDS, sceneObjectReferences);
         }
     }
 }
