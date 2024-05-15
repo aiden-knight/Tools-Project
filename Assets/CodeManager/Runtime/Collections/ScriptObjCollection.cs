@@ -8,6 +8,9 @@ namespace AidenK.CodeManager
     {
         public List<T> Items = new List<T>();
 
+        [SerializeField]
+        bool Reset;
+
         public void Add(T item)
         {
             Items.Add(item);
@@ -26,6 +29,14 @@ namespace AidenK.CodeManager
         {
             Items.Remove(item);
             if (debug) Debug.Log(item.ToString() + " removed from collection");
+        }
+
+        private void OnEnable()
+        {
+            if (Reset)
+            {
+                Items.Clear();
+            }
         }
     }
 }
