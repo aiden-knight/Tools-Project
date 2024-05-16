@@ -8,20 +8,20 @@ namespace AidenK.CodeManager
     public abstract class ScriptObjVariable<T> : ScriptObjVariableBase
     {
         [SerializeField, ReadOnly]
-        T m_value;
+        T _value;
 
         public T DefaultValue;
 
         public T Value
         {
-            get => m_value;
+            get => _value;
             set
             {
-                if (!m_value.Equals(value))
+                if (!_value.Equals(value))
                 {
-                    m_value = value;
-                    if(debug) Debug.Log(GetType().ToString() + " value changed to " + m_value.ToString());
-                    onValueChanged?.Invoke(m_value);
+                    _value = value;
+                    if(debug) Debug.Log(GetType().ToString() + " value changed to " + _value.ToString());
+                    onValueChanged?.Invoke(_value);
                 }
             }
         }
@@ -33,7 +33,7 @@ namespace AidenK.CodeManager
         {
             if(resetOn == ResetOn.Play)
             {
-                m_value = DefaultValue;
+                _value = DefaultValue;
             }
             else if(resetOn == ResetOn.SceneLoad)
             {
@@ -48,7 +48,7 @@ namespace AidenK.CodeManager
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            m_value = DefaultValue;
+            _value = DefaultValue;
         }
     }
 }

@@ -6,10 +6,12 @@ namespace AidenK.CodeManager
 {
     public abstract class ScriptObjCollection<T> : ScriptObjCollectionBase
     {
-        public List<T> Items = new List<T>();
-
         [SerializeField]
         bool Reset;
+
+        [SerializeField]
+        List<T> _items = new List<T>();
+        public List<T> Items { get => _items; }
 
         public void Add(T item)
         {
@@ -35,7 +37,7 @@ namespace AidenK.CodeManager
         {
             if (Reset)
             {
-                Items.Clear();
+                _items.Clear();
             }
         }
     }

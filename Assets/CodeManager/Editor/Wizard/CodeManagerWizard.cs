@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Newtonsoft.Json;
 using Enum = System.Enum;
+using UnityEditor.SceneManagement;
 
 namespace AidenK.CodeManager
 {
