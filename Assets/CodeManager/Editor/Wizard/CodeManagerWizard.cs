@@ -180,9 +180,22 @@ namespace AidenK.CodeManager
             }
             else
             {
+                bool saveChanges = false;
                 foreach(AssetInfo assetinfo in AssetTracker.AssetInfos)
                 {
-                    SetupButton(assetinfo);
+                    if (AssetDatabase.GUIDToAssetPath(assetinfo.GUID) == string.Empty)
+                    {
+                        AssetTracker.AssetInfos.Remove(assetinfo);
+                        saveChanges = true;
+                    }
+                    else
+                    {
+                        SetupButton(assetinfo);
+                    }
+                }
+                if(saveChanges)
+                {
+                    AssetTracker.SaveChanges();
                 }
             }
 
