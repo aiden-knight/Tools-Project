@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using Newtonsoft.Json;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
 
 namespace AidenK.CodeManager
 {
@@ -86,6 +88,31 @@ namespace AidenK.CodeManager
             ScriptObjEnd = 2,
             Scene,
             Prefab,
+        }
+
+        public static void FindReferences()
+        {
+            FindingAssetReferences = true;
+            AssetFinder.FindReferences();
+            SaveChanges();
+            FindingAssetReferences = false;
+        }
+
+        /// <summary>
+        /// Given a prefab GUID and paths of assets it references, add guid to asset's references list if not already contained
+        /// </summary>
+        /// <param name="paths"></param>
+        /// <param name="prefabGUID"></param>
+        public static void AddAllPrefabReferences(List<string> paths, string prefabGUID)
+        {
+            foreach (string path in paths)
+            {
+                AssetInfo info = AssetInfos.FirstOrDefault(info => info.Path == path);
+                if (info == null) continue;
+                if(info.AssetReferencesGUIDs.Contains(prefabGUID)) continue;
+
+                info.AssetReferencesGUIDs.Add(prefabGUID);
+            }
         }
 
         /// <summary>
@@ -188,7 +215,7 @@ namespace AidenK.CodeManager
                 default:
                     return;
             }
-            changes = true;
+            _changes = true;
         }
 
         // Handle created or modified assets (also occurs when assets have moved)
@@ -220,7 +247,7 @@ namespace AidenK.CodeManager
                     return;
             }
 
-            changes = true;
+            _changes = true;
         }
 
         private static void HandleMoved(string path)
@@ -242,7 +269,14 @@ namespace AidenK.CodeManager
                     return;
             }
 
-            changes = true;
+            _changes = true;
+        }
+
+        public static void HandleSceneSaved(string path)
+        {
+            Scene scene = EditorSceneManager.GetActiveScene();
+            if (scene.path != path) return;
+            
         }
 
         // Handles any moved assets
@@ -255,7 +289,7 @@ namespace AidenK.CodeManager
         }
 
         // Whether there was changes
-        static bool changes = false;
+        static bool _changes = false;
         // When inheriting from AssetPostprocessor, implementing this function captures changes to assets
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
@@ -269,10 +303,10 @@ namespace AidenK.CodeManager
             HandleAllImported(importedAssets);
             HandleAllMoved(movedAssets);
             
-            if (changes)
+            if (_changes)
             {
                 SaveChanges();
-                changes = false;
+                _changes = false;
             }
         }
     }
@@ -291,7 +325,11 @@ namespace AidenK.CodeManager
             {
                 foreach (string path in paths)
                 {
-                    Debug.Log(path);
+                    Type type = AssetDatabase.GetMainAssetTypeAtPath(path);
+                    if(type == typeof(SceneAsset))
+                    {
+                        AssetTracker.HandleSceneSaved(path);
+                    }
                 }
             }
             

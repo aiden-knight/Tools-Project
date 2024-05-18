@@ -1,10 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using Scene = UnityEngine.SceneManagement.Scene;
+using Type = System.Type;
 
 namespace AidenK.CodeManager
 {
@@ -28,16 +32,37 @@ namespace AidenK.CodeManager
             return activeScenesGUIDs;
         }
 
+        private static readonly Type[] WatchedTypes =
+            {
+                typeof(ScriptObjVariableBase),
+                typeof(ScriptObjEventBase),
+                typeof(ScriptObjCollectionBase),
+        };
+
+        static bool IsWatched(Type type)
+        {
+            foreach (Type watched in WatchedTypes)
+            {
+                if (type.IsSubclassOf(watched))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /// <summary>
         /// Loops over the components in a game object to determine if it contains a reference to the object
         /// </summary>
-        /// <param name="toFind">Object to find reference to</param>
         /// <param name="gameObject">GameObject to look in</param>
+        /// <param name="ignoredPaths">Paths to ignore should they already be on a prefab</param>
         /// <returns>Whether or not the gameobject was found</returns>
-        static bool ReferenceInGameObject(Object toFind, GameObject gameObject)
+        static List<string> GetReferencesInGameObject(GameObject gameObject, List<string> ignoredPaths = null)
         {
+            List<string> paths = new List<string>();
+
             // look for target object in component's serialized fields
-            Component[] componentsArray = gameObject.GetComponents<Component>();
+            Component[] componentsArray = gameObject.GetComponents(typeof(MonoBehaviour));
             foreach (Component component in componentsArray)
             {
                 if (component == null) continue;
@@ -48,49 +73,52 @@ namespace AidenK.CodeManager
                 SerializedProperty iterator = serializedObject.GetIterator();
                 while (iterator.NextVisible(true))
                 {
-                    if (iterator.propertyType != SerializedPropertyType.ObjectReference) continue;
+                    if (iterator.propertyType != SerializedPropertyType.ObjectReference) continue; // if not reference to object
+                    if (iterator.objectReferenceValue == null) continue; // if reference value is null
 
-                    if (iterator.objectReferenceValue == toFind)
+                    string path = AssetDatabase.GetAssetPath(iterator.objectReferenceValue);
+                    if (path == null || path == string.Empty) continue; // if path doesn't exist
+
+                    Type type = iterator.objectReferenceValue.GetType();                    
+                    if (IsWatched(type)) // is of watched type
                     {
-                        return true;
+                        if (paths.Contains(path)) continue; // if already found
+                        if (ignoredPaths != null && ignoredPaths.Contains(path)) continue; // for prefabs
+                        paths.Add(path);
                     }
                 }
             }
 
-            return false;
+            return paths;
+        }
+
+        static void GetPrefabReferenceSingle(string guid)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
+
+            List<string> references = GetReferencesInGameObject(prefab);
+            foreach (Transform child in prefab.GetComponentsInChildren<Transform>())
+            {
+                List<string> childRef = GetReferencesInGameObject(child.gameObject, references);
+                if (childRef.Count > 0)
+                {
+                    references.AddRange(childRef);
+                }
+            }
+
+            AssetTracker.AddAllPrefabReferences(references, guid);
         }
 
         /// <summary>
-        /// Checks all prefabs for a reference to the  object
+        /// Checks all prefabs for references
         /// </summary>
-        /// <param name="toFind">Object to find reference to</param>
-        /// <returns>List of the GUIDs of the prefabs that have references</returns>
-        static List<string> GetPrefabReferences(Object toFind)
+        static void GetPrefabReferences()
         {
             string[] allPrefabGUIDs = AssetDatabase.FindAssets("t:Prefab");
-            List<string> prefabGUIDs = new List<string>();
-
             foreach (string guid in allPrefabGUIDs)
             {
-                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
-
-                if(ReferenceInGameObject(toFind, prefab))
-                {
-                    prefabGUIDs.Add(guid);
-                }
-                else
-                {
-                    foreach (Transform child in prefab.GetComponentsInChildren<Transform>())
-                    {
-                        if (ReferenceInGameObject(toFind, child.gameObject))
-                        {
-                            prefabGUIDs.Add(guid);
-                            break;
-                        }
-                    }
-                }                
+                GetPrefabReferenceSingle(guid);
             }
-            return prefabGUIDs;
         }
 
         /// <summary>
@@ -98,9 +126,9 @@ namespace AidenK.CodeManager
         /// </summary>
         /// <param name="toFind">Object to find reference to</param>
         /// <returns>List of the objects in scene that have references</returns>
-        static List<Object> GetSceneReferences(Object toFind)
+        public static List<(Object, List<string>)> GetSceneReferences()
         {
-            List<Object> references = new List<Object>();
+            List<(Object, List<string>)> sceneReferences = new List<(Object, List<string>)>();
 
             // All game objects in all active scenes and assets
             foreach (Object obj in Resources.FindObjectsOfTypeAll<Object>())
@@ -110,13 +138,14 @@ namespace AidenK.CodeManager
                 if (gameObject.hideFlags == HideFlags.NotEditable || gameObject.hideFlags == HideFlags.HideAndDontSave) continue;
                 if (EditorUtility.IsPersistent(gameObject)) continue;
 
-                if(ReferenceInGameObject(toFind, gameObject))
+                List<string> references = GetReferencesInGameObject(gameObject);
+                if(references.Count > 0)
                 {
-                    references.Add(obj);
+                    sceneReferences.Add((obj, references));
                 }
             }
 
-            return references;
+            return sceneReferences;
         }
 
         /// <summary>
@@ -158,13 +187,13 @@ namespace AidenK.CodeManager
         /// Slow function to generate all the references to an object to store it on the AssetPostprocessor
         /// </summary>
         /// <param name="toFind">Object to find</param>
-        public static (List<string>, List<SceneObjectReference>) FindReferences(Object toFind)
+        public static void FindReferences()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return (null, null);
 
             List<string> activeSceneGUIDs = GetActiveScenes();
 
-            List<string> prefabGUIDS = GetPrefabReferences(toFind);
+            GetPrefabReferences();
 
             // find references in all scenes
             string[] sceneGUIDS = AssetDatabase.FindAssets("t:SceneAsset");
@@ -175,7 +204,7 @@ namespace AidenK.CodeManager
                 EditorSceneManager.OpenScene(path, mode);
                 mode = OpenSceneMode.Additive;
             }
-            List<Object> sceneObjects = GetSceneReferences(toFind);
+            List<(Object, List<string>)> sceneObjects = GetSceneReferences();
             List<SceneObjectReference> sceneObjectReferences = GetSceneObjectReferences(sceneObjects);
 
             // reopen previous active scenes
@@ -187,8 +216,6 @@ namespace AidenK.CodeManager
 
                 mode = OpenSceneMode.Additive;
             }
-
-            return (prefabGUIDS, sceneObjectReferences);
         }
     }
 }

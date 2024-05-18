@@ -74,18 +74,7 @@ namespace AidenK.CodeManager
         void FindAllReferences(ClickEvent evt)
         {
             Deselect();
-            AssetTracker.FindingAssetReferences = true;
-            foreach(AssetInfo info in AssetTracker.AssetInfos)
-            {
-                Object obj = AssetDatabase.LoadAssetAtPath<Object>(AssetDatabase.GUIDToAssetPath(info.GUID));
-                (List<string> prefabGUIDs, List<SceneObjectReference> sceneRefs) = AssetFinder.FindReferences(obj);
-
-                info.AssetReferencesGUIDs = prefabGUIDs;
-                info.SceneObjectReferences = sceneRefs;
-            }
-
-            AssetTracker.SaveChanges();
-            AssetTracker.FindingAssetReferences = false;
+            AssetTracker.FindReferences();
         }
 
         void ClassTypeChanged(ChangeEvent<string> evt)
