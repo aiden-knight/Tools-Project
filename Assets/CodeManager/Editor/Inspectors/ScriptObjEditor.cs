@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -14,10 +15,11 @@ namespace AidenK.CodeManager
         VisualTreeAsset _referencesEditor = null;
         VisualElement _scrollingContainerContent;
 
-        internal struct SceneObject
+        internal struct SceneAssetCallbackData
         {
             public string Path;
-            public Object Object;
+            public Object SceneObject;
+            public SceneObjectReference SceneObjectReference;
         }
 
         void SelectObjectWithInspector(ClickEvent evt, Object obj)
@@ -33,45 +35,48 @@ namespace AidenK.CodeManager
             EditorGUIUtility.PingObject(obj);
         }
 
-        void SelectScene(ClickEvent evt, SceneObject scene)
+        void SelectScene(ClickEvent evt, SceneAssetCallbackData data)
         {
-            if(Selection.activeObject == scene.Object)
+            if(Selection.activeObject == data.SceneObject)
             {
-                EditorSceneManager.OpenScene(scene.Path);
+                EditorSceneManager.OpenScene(data.Path);
+                Object sceneObject = GetObjectInScene(data.SceneObjectReference);
+                SelectObjectWithInspector(evt, sceneObject);
             }
             else
             {
-                Selection.activeObject = scene.Object;
+                Selection.activeObject = data.SceneObject;
                 EditorUtility.FocusProjectWindow();
-                EditorGUIUtility.PingObject(scene.Object);
+                EditorGUIUtility.PingObject(data.SceneObject);
             }
         }
 
-        void SetupButtonFromSceneAsset(string scenePath, string sceneName)
+        void SetupButtonFromSceneAsset(string scenePath, SceneObjectReference objectReference)
         {
             Button button = new Button();
 
             string name = scenePath.Substring("Assets/".Length);
-            name += " [" + sceneName + "]";
+            name += " [" + objectReference.ObjectName + "]";
             button.text = name;
-            button.name = sceneName;
+            button.name = objectReference.ObjectName;
 
-            SceneObject sceneObject = new SceneObject()
+            SceneAssetCallbackData sceneObject = new SceneAssetCallbackData()
             {
                 Path = scenePath,
-                Object = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath)
+                SceneObject = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath),
+                SceneObjectReference = objectReference
             };
 
-            button.RegisterCallback<ClickEvent, SceneObject>(SelectScene, sceneObject);
+            button.RegisterCallback<ClickEvent, SceneAssetCallbackData>(SelectScene, sceneObject);
             _scrollingContainerContent.Add(button);
         }
 
-        void SetupButtonFromSceneObject(Object obj)
+        void SetupButtonFromSceneObject(Object sceneObject)
         {
             Button button = new Button();
 
             string name;
-            if (obj is GameObject gameObj)
+            if (sceneObject is GameObject gameObj)
             {
                 name = string.Format("{0} ", gameObj.scene.name);
             }
@@ -80,10 +85,10 @@ namespace AidenK.CodeManager
                 return;
             }
 
-            name += "[" + obj.name + "]";
+            name += "[" + sceneObject.name + "]";
             button.text = name;
-            button.name = obj.name;
-            button.RegisterCallback<ClickEvent, Object>(SelectObjectWithInspector, obj);
+            button.name = sceneObject.name;
+            button.RegisterCallback<ClickEvent, Object>(SelectObjectWithInspector, sceneObject);
             _scrollingContainerContent.Add(button);
         }
 
@@ -104,6 +109,38 @@ namespace AidenK.CodeManager
             return null;
         }
         
+        Object GetObjectInScene(SceneObjectReference objectReference, int sceneIndex = 0)
+        {
+            // object is in active scene so find it to reference
+            Scene scene = EditorSceneManager.GetSceneAt(sceneIndex);
+            Transform transform = null;
+            foreach (int index in objectReference.IndexesFromRoot)
+            {
+                if (transform == null)
+                {
+                    GameObject[] rootObjects = scene.GetRootGameObjects();
+                    if (index >= rootObjects.Length) break;
+                    else transform = scene.GetRootGameObjects()[index].transform;
+
+                }
+                else
+                {
+                    if (index >= transform.childCount)
+                    {
+                        transform = null;
+                        break;
+                    }
+                    transform = transform.GetChild(index);
+                }
+            }
+
+            if (transform != null && transform.name == objectReference.ObjectName)
+            {
+                return transform.gameObject;
+            }
+            else { return null; }
+        }
+
         public override VisualElement CreateInspectorGUI()
         {
             VisualElement root = new VisualElement();
@@ -151,40 +188,17 @@ namespace AidenK.CodeManager
                     // for each game object in scenes
                     foreach (SceneObjectReference objectReference in assetInfo.SceneObjectReferences)
                     {
-                        string path = AssetDatabase.GUIDToAssetPath(objectReference.SceneGUID);
-                        int sceneIndex = activeScenePaths.IndexOf(path);
+                        string scenePath = AssetDatabase.GUIDToAssetPath(objectReference.SceneGUID);
+                        int sceneIndex = activeScenePaths.IndexOf(scenePath);
                         if (sceneIndex == -1) // if object not in an active scene
                         {
-                            SetupButtonFromSceneAsset(path, objectReference.ObjectName);
+                            SetupButtonFromSceneAsset(scenePath, objectReference);
                             continue;
                         }
 
-                        // object is in active scene so find it to reference
-                        Scene scene = EditorSceneManager.GetSceneAt(sceneIndex);
-                        Transform transform = null;
-                        foreach (int index in objectReference.IndexesFromRoot)
-                        {
-                            if (transform == null)
-                            {
-                                GameObject[] rootObjects = scene.GetRootGameObjects();
-                                if (index >= rootObjects.Length) break;
-                                else transform = scene.GetRootGameObjects()[index].transform;
 
-                            }
-                            else
-                            {
-                                if(index >= transform.childCount)
-                                {
-                                    transform = null;
-                                    break;
-                                }
-                                transform = transform.GetChild(index);
-
-                            }
-                        }
-
-                        if (transform != null && transform.name == objectReference.ObjectName)
-                            SetupButtonFromSceneObject(transform.gameObject);
+                        Object sceneObject = GetObjectInScene(objectReference, sceneIndex);
+                        if (sceneObject != null) SetupButtonFromSceneObject(sceneObject);
                     }
                 }
 
