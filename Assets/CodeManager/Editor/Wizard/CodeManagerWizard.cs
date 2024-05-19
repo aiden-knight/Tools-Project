@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using Enum = System.Enum;
 using UnityEditor.SceneManagement;
 using System;
+using System.IO;
 
 namespace AidenK.CodeManager
 {
@@ -115,7 +116,7 @@ namespace AidenK.CodeManager
             }
 
             // get saved data for the UI
-            string[] wizDataGuid = AssetDatabase.FindAssets("t:WizardData", new[] { "Assets/AidenK.CodeManager/Settings" });
+            string[] wizDataGuid = AssetDatabase.FindAssets("t:WizardData", AssetTracker.JsonFolder);
             if(wizDataGuid.Length > 0)
             {
                 _wizardData = AssetDatabase.LoadAssetAtPath<WizardData>(AssetDatabase.GUIDToAssetPath(wizDataGuid[0]));
@@ -123,7 +124,8 @@ namespace AidenK.CodeManager
             else
             {
                 _wizardData = ScriptableObject.CreateInstance<WizardData>();
-                AssetDatabase.CreateAsset(_wizardData, "Assets/AidenK.CodeManager/WizardData.asset");
+                Directory.CreateDirectory(AssetTracker.JsonFolder[0]);
+                AssetDatabase.CreateAsset(_wizardData, AssetTracker.JsonFolder[0] + "WizardData.asset");
                 AssetDatabase.SaveAssets();
             }
 

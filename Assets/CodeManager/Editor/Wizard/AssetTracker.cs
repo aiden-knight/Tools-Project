@@ -450,7 +450,7 @@ namespace AidenK.CodeManager
             bool jsonLoaded = CheckLoad();
             if(!jsonLoaded)
             {
-                Debug.Log("Cancelled OnPostprocess as json file not loaded");
+                Debug.Log("Cancelled OnPostprocess as json file not loaded, try opening code manager window");
                 return;
             }
 

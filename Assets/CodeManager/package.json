@@ -4,5 +4,12 @@
     "displayName": "Code Manager",
     "description": "Code Manager package that aids in code decoupling through scriptable objects",
     "unity": "2022.3",
-    "unityRelease": "4f1"
+    "unityRelease": "4f1",
+    "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.2.1"
+    },
+    "author": {
+        "name": "Aiden Knight",
+        "url": "https://aidenknight.co.uk/"
+    }
 }
