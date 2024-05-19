@@ -14,28 +14,55 @@ namespace AidenK.CodeManager
         VisualTreeAsset _referencesEditor = null;
         VisualElement _scrollingContainerContent;
 
-        public void SelectObjectWithInspector(ClickEvent evt, Object obj)
+        internal struct SceneObject
+        {
+            public string Path;
+            public Object Object;
+        }
+
+        void SelectObjectWithInspector(ClickEvent evt, Object obj)
         {
             SelectObject(evt, obj);
             EditorApplication.ExecuteMenuItem("Window/General/Inspector");
         }
 
-        public void SelectObject(ClickEvent evt, Object obj)
+        void SelectObject(ClickEvent evt, Object obj)
         {
             Selection.activeObject = obj;
             EditorUtility.FocusProjectWindow();
             EditorGUIUtility.PingObject(obj);
         }
 
-        void SetupButtonFromObject(string scenePath, string objectName)
+        void SelectScene(ClickEvent evt, SceneObject scene)
+        {
+            if(Selection.activeObject == scene.Object)
+            {
+                EditorSceneManager.OpenScene(scene.Path);
+            }
+            else
+            {
+                Selection.activeObject = scene.Object;
+                EditorUtility.FocusProjectWindow();
+                EditorGUIUtility.PingObject(scene.Object);
+            }
+        }
+
+        void SetupButtonFromSceneAsset(string scenePath, string sceneName)
         {
             Button button = new Button();
 
             string name = scenePath.Substring("Assets/".Length);
-            name += " [" + objectName + "]";
+            name += " [" + sceneName + "]";
             button.text = name;
-            button.name = objectName;
-            button.RegisterCallback<ClickEvent, Object>(SelectObject, AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath));
+            button.name = sceneName;
+
+            SceneObject sceneObject = new SceneObject()
+            {
+                Path = scenePath,
+                Object = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath)
+            };
+
+            button.RegisterCallback<ClickEvent, SceneObject>(SelectScene, sceneObject);
             _scrollingContainerContent.Add(button);
         }
 
@@ -76,8 +103,7 @@ namespace AidenK.CodeManager
         {
             return null;
         }
-            
-
+        
         public override VisualElement CreateInspectorGUI()
         {
             VisualElement root = new VisualElement();
@@ -129,7 +155,7 @@ namespace AidenK.CodeManager
                         int sceneIndex = activeScenePaths.IndexOf(path);
                         if (sceneIndex == -1) // if object not in an active scene
                         {
-                            SetupButtonFromObject(path, objectReference.ObjectName);
+                            SetupButtonFromSceneAsset(path, objectReference.ObjectName);
                             continue;
                         }
 
