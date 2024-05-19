@@ -6,32 +6,32 @@ namespace AidenK.CodeManager
 {
     public abstract class ScriptObjEventOneParam<T> : ScriptObjEventBase
     {
-        List<ScriptObjListenerOneParam<T>> m_listeners = new ();
+        List<ScriptObjListenerOneParam<T>> _listeners = new ();
 
-        [SerializeField] T DebugValue;
+        [SerializeField] T _debugValue;
 
         private void OnEnable()
         {
-            CallInvoke = () => { Invoke(DebugValue); };
+            CallInvoke = () => { Invoke(_debugValue); };
         }
 
         public void Invoke(T value)
         {
             // Iterate backwards in case event involves removing themself as a listener
-            for(int i = m_listeners.Count - 1; i >= 0; i--)
+            for(int i = _listeners.Count - 1; i >= 0; i--)
             {
-                m_listeners[i].Invoke(value);
+                _listeners[i].Invoke(value);
             }
         }
 
         public void AddListener(ScriptObjListenerOneParam<T> listener)
         {
-            m_listeners.Add(listener);
+            _listeners.Add(listener);
         }
 
         public void RemoveListener(ScriptObjListenerOneParam<T> listener)
         {
-            m_listeners.Remove(listener);
+            _listeners.Remove(listener);
         }
     }
 }

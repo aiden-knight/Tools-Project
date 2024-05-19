@@ -20,7 +20,7 @@ namespace AidenK.CodeManager
                 if (!_value.Equals(value))
                 {
                     _value = value;
-                    if(debug) Debug.Log(GetType().ToString() + " value changed to " + _value.ToString());
+                    if(_debug) Debug.Log(GetType().ToString() + " value changed to " + _value.ToString());
                     onValueChanged?.Invoke(_value);
                 }
             }
@@ -31,11 +31,11 @@ namespace AidenK.CodeManager
 
         void OnEnable()
         {
-            if(resetOn == ResetOn.Play)
+            if(_resetOn == ResetOn.Play)
             {
                 _value = DefaultValue;
             }
-            else if(resetOn == ResetOn.SceneLoad)
+            else if(_resetOn == ResetOn.SceneLoad)
             {
                 SceneManager.sceneLoaded += OnSceneLoaded;
             }

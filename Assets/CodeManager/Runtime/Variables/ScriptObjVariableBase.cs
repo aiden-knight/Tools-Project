@@ -12,8 +12,8 @@ namespace AidenK.CodeManager
     public abstract class ScriptObjVariableBase : ScriptableObject
     {
         [SerializeField]
-        protected bool debug = false;
-        [SerializeField]
-        protected ResetOn resetOn = ResetOn.Play;
+        protected bool _debug = false;
+        [SerializeField, Tooltip("When to reset the variable back to default value")]
+        protected ResetOn _resetOn = ResetOn.Play;
     }
 }

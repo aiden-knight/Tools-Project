@@ -23,7 +23,7 @@ namespace AidenK.CodeManager
         public DropdownField GenerateType;
 
         // For ensuring fields don't reset on unity reimport
-        [SerializeField] WizardData _wizardData;
+        WizardData _wizardData;
 
         // container to put the created inspector in
         VisualElement _inspectorContainer = null;
@@ -65,7 +65,7 @@ namespace AidenK.CodeManager
                 _inspectorContainer.Remove(_currentInspector);
                 _currentInspector = null;
             }
-            _wizardData.selectedAssetGUID = string.Empty;
+            _wizardData.SelectedAssetGUID = string.Empty;
         }
         void Deselect(ClickEvent evt) { Deselect(); }
 
@@ -76,12 +76,12 @@ namespace AidenK.CodeManager
 
         void ClassTypeChanged(ChangeEvent<string> evt)
         {
-            _wizardData.classType = ClassType.value;
+            _wizardData.ClassType = ClassType.value;
         }
 
         void GenerateTypeChanged(ChangeEvent<string> evt)
         {
-            _wizardData.dropdownIndex = GenerateType.index;
+            _wizardData.DropdownIndex = GenerateType.index;
         }
 
         // Sets up the UI for the window on window creation
@@ -128,8 +128,8 @@ namespace AidenK.CodeManager
             }
 
             // get the saved data for class generation
-            ClassType.value = _wizardData.classType;
-            GenerateType.index = _wizardData.dropdownIndex;
+            ClassType.value = _wizardData.ClassType;
+            GenerateType.index = _wizardData.DropdownIndex;
 
             // setup generation callbacks
             ClassType.RegisterValueChangedCallback(ClassTypeChanged);
@@ -168,34 +168,36 @@ namespace AidenK.CodeManager
             {
                 // if any of the assets in assets info no longer exist remove them
                 bool saveChanges = false;
-                foreach(AssetInfo assetinfo in AssetTracker.AssetInfos)
+                for (int index = AssetTracker.GetAssetCount() - 1; index >= 0; index--)
                 {
-                    if (AssetDatabase.GUIDToAssetPath(assetinfo.GUID) == string.Empty)
+                    AssetInfo assetInfo = AssetTracker.GetAssetAt(index);
+                    if (AssetDatabase.GUIDToAssetPath(assetInfo.GUID) == string.Empty)
                     {
-                        AssetTracker.AssetInfos.Remove(assetinfo);
+                        AssetTracker.RemoveAssetAt(index);
                         saveChanges = true;
                     }
                     else
                     {
-                        SetupButton(assetinfo);
+                        SetupButton(assetInfo);
                     }
                 }
+                
                 if(saveChanges)
                 {
                     AssetTracker.SaveChanges();
                 }
             }
 
-            if (_wizardData.selectedAssetGUID != string.Empty)
+            if (_wizardData.SelectedAssetGUID != string.Empty)
             {
-                VisualElement elem = _scrollingContainerContent.Children().FirstOrDefault(elem => elem.name == _wizardData.selectedAssetGUID);
+                VisualElement elem = _scrollingContainerContent.Children().FirstOrDefault(elem => elem.name == _wizardData.SelectedAssetGUID);
                 if (elem == null)
                 {
-                    _wizardData.selectedAssetGUID = string.Empty;
+                    _wizardData.SelectedAssetGUID = string.Empty;
                 }
                 else
                 {
-                    SelectAsset(_wizardData.selectedAssetGUID, false);
+                    SelectAsset(_wizardData.SelectedAssetGUID, false);
                 }
             }
 
@@ -220,7 +222,7 @@ namespace AidenK.CodeManager
             {
                 EditorUtility.FocusProjectWindow();
                 Selection.activeObject = asset;
-                _wizardData.selectedAssetGUID = guid;
+                _wizardData.SelectedAssetGUID = guid;
                 EditorGUIUtility.PingObject(asset);
             }
 
@@ -233,9 +235,9 @@ namespace AidenK.CodeManager
         /// </summary>
         public void RefreshInspector()
         {
-            if (_currentInspector != null && _wizardData.selectedAssetGUID != null)
+            if (_currentInspector != null && _wizardData.SelectedAssetGUID != null)
             {
-                UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(_wizardData.selectedAssetGUID), typeof(UnityEngine.Object));
+                UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(_wizardData.SelectedAssetGUID), typeof(UnityEngine.Object));
 
                 _inspectorContainer.Remove(_currentInspector);
                 _currentInspector = null;
@@ -249,7 +251,7 @@ namespace AidenK.CodeManager
         void SelectAssetCallback(ClickEvent evt, string guid)
         {
             SelectAsset(guid);
-            _wizardData.selectedAssetGUID = guid;
+            _wizardData.SelectedAssetGUID = guid;
         }
 
         // compares visual elements by name to sort the scroll view
@@ -279,7 +281,7 @@ namespace AidenK.CodeManager
             _scrollingContainerContent.Remove(deleted);
 
             // if the removed element was selected remove the inspector for it
-            if (deleted.name == _wizardData.selectedAssetGUID)
+            if (deleted.name == _wizardData.SelectedAssetGUID)
             {
                 Deselect();
             }

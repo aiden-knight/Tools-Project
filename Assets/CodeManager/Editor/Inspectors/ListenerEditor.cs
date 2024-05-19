@@ -8,13 +8,13 @@ namespace AidenK.CodeManager
     public class ListenerEditor: Editor
     {
         [SerializeField]
-        VisualTreeAsset ListenerTreeAsset = null;
+        VisualTreeAsset _listenerTreeAsset = null;
         public override VisualElement CreateInspectorGUI()
         {
             VisualElement root = new VisualElement();
             root.Add(new IMGUIContainer(OnInspectorGUI));
 
-            VisualElement uxmlElement = ListenerTreeAsset.Instantiate();
+            VisualElement uxmlElement = _listenerTreeAsset.Instantiate();
             root.Add(uxmlElement);
 
             return root;

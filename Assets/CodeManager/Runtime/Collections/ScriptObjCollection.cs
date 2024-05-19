@@ -6,8 +6,8 @@ namespace AidenK.CodeManager
 {
     public abstract class ScriptObjCollection<T> : ScriptObjCollectionBase
     {
-        [SerializeField]
-        bool Reset;
+        [SerializeField, Tooltip("Whether to clear item list when you start play")]
+        bool _reset;
 
         [SerializeField]
         List<T> _items = new List<T>();
@@ -16,7 +16,7 @@ namespace AidenK.CodeManager
         public void Add(T item)
         {
             Items.Add(item);
-            if (debug) Debug.Log(item.ToString() + " added to collection");
+            if (_debug) Debug.Log(item.ToString() + " added to collection");
         }
 
         public void AddUnique(T item)
@@ -30,12 +30,12 @@ namespace AidenK.CodeManager
         public void Remove(T item)
         {
             Items.Remove(item);
-            if (debug) Debug.Log(item.ToString() + " removed from collection");
+            if (_debug) Debug.Log(item.ToString() + " removed from collection");
         }
 
         private void OnEnable()
         {
-            if (Reset)
+            if (_reset)
             {
                 _items.Clear();
             }

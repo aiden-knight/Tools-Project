@@ -18,7 +18,8 @@ namespace AidenK.CodeManager
 
     public static class ClassGenerator
     {
-        //static string[] types = { "bool", "char", "double", "float", "int", "long", "string", "Vector2", "Vector3" };
+        //private static string[] s_types = { "bool", "char", "double", "float", "int", "long", "string", "Vector2", "Vector3" };
+        private static string s_directory = Application.dataPath + "/AidenK.CodeManager/Generated/";
 
         public static void Generate(ClassType classType, string type)
         {
@@ -45,8 +46,7 @@ namespace AidenK.CodeManager
             AssetDatabase.Refresh();
         }
 
-        static string dir = Application.dataPath + "/AidenK.CodeManager/Generated/";
-        static string NameFixer(string type)
+        private static string NameFixer(string type)
         {
             // iterate backwards over type string
             for( int i = type.Length - 1; i >= 0; i-- ) 
@@ -74,16 +74,16 @@ namespace AidenK.CodeManager
             return type;
         }
 
-        static void GenerateVariable(string type)
+        private static void GenerateVariable(string type)
         {
-            Directory.CreateDirectory(dir + "/VariablesAndReferences/");
+            Directory.CreateDirectory(s_directory + "/VariablesAndReferences/");
 
             string outFile = "TNameVariable.cs";
             string classTxt = "using UnityEngine;\r\n\r\nnamespace AidenK.CodeManager\r\n{\r\n    [CreateAssetMenu(menuName = \"Code Manager/Generated/Variables/TName\", order = 0)]\r\n    public class TNameVariable : ScriptObjVariable<Type> { }\r\n}";
 
             string typeAsName = NameFixer(type);
 
-            outFile = dir + "/VariablesAndReferences/" + outFile.Replace("TName", typeAsName);
+            outFile = s_directory + "/VariablesAndReferences/" + outFile.Replace("TName", typeAsName);
             classTxt = classTxt.Replace("TName", typeAsName);
             classTxt = classTxt.Replace("Type", type);
             using (StreamWriter writer = new StreamWriter(outFile))
@@ -92,16 +92,16 @@ namespace AidenK.CodeManager
             }
         }
 
-        static void GenerateReference(string type)
+        private static void GenerateReference(string type)
         {
-            Directory.CreateDirectory(dir + "/VariablesAndReferences/");
+            Directory.CreateDirectory(s_directory + "/VariablesAndReferences/");
 
             string outFile = "TNameReference.cs";
             string classTxt = "using System;\r\n\r\nnamespace AidenK.CodeManager\r\n{\r\n    [Serializable]\r\n    public class TNameReference : ScriptObjReference<Type> { }\r\n}";
 
             string typeAsName = NameFixer(type);
 
-            outFile = dir + "/VariablesAndReferences/" + outFile.Replace("TName", typeAsName);
+            outFile = s_directory + "/VariablesAndReferences/" + outFile.Replace("TName", typeAsName);
             classTxt = classTxt.Replace("TName", typeAsName);
             classTxt = classTxt.Replace("Type", type);
             using (StreamWriter writer = new StreamWriter(outFile))
@@ -110,9 +110,9 @@ namespace AidenK.CodeManager
             }
         }
 
-        static void GenerateEventAndListener(string type)
+        private static void GenerateEventAndListener(string type)
         {
-            Directory.CreateDirectory(dir + "/EventsAndListeners/");
+            Directory.CreateDirectory(s_directory + "/EventsAndListeners/");
 
             string eventOutFile = "TNameEvent.cs";
             string eventClass = "using UnityEngine;\r\n\r\nnamespace AidenK.CodeManager\r\n{\r\n    [CreateAssetMenu(menuName = \"Code Manager/Generated/Events/TName Event\", order = 0)]\r\n    public class TNameEvent : ScriptObjEventOneParam<Type>\r\n    {\r\n\r\n    }\r\n}";
@@ -122,7 +122,7 @@ namespace AidenK.CodeManager
 
             string typeAsName = NameFixer(type);
 
-            eventOutFile = dir + "/EventsAndListeners/" + eventOutFile.Replace("TName", typeAsName);
+            eventOutFile = s_directory + "/EventsAndListeners/" + eventOutFile.Replace("TName", typeAsName);
             eventClass = eventClass.Replace("TName", typeAsName);
             eventClass = eventClass.Replace("Type", type);
             using (StreamWriter writer = new StreamWriter(eventOutFile))
@@ -130,7 +130,7 @@ namespace AidenK.CodeManager
                 writer.Write(eventClass);
             }
 
-            listenerOutFile = dir + "/EventsAndListeners/" + listenerOutFile.Replace("TName", typeAsName);
+            listenerOutFile = s_directory + "/EventsAndListeners/" + listenerOutFile.Replace("TName", typeAsName);
             listenerClass = listenerClass.Replace("TName", typeAsName);
             listenerClass = listenerClass.Replace("Type", type);
             using (StreamWriter writer = new StreamWriter(listenerOutFile))
@@ -139,16 +139,16 @@ namespace AidenK.CodeManager
             }
         }
 
-        static void GenerateCollection(string type)
+        private static void GenerateCollection(string type)
         {
-            Directory.CreateDirectory(dir + "/Collections/");
+            Directory.CreateDirectory(s_directory + "/Collections/");
 
             string outFile = "TNameCollection.cs";
             string classTxt = "using UnityEngine;\r\n\r\nnamespace AidenK.CodeManager\r\n{\r\n    [CreateAssetMenu(menuName = \"Code Manager/Generated/Collections/TName\", order = 0)]\r\n    public class TNameCollection : ScriptObjCollection<Type> { }\r\n}";
 
             string typeAsName = NameFixer(type);
 
-            outFile = dir + "/Collections/" + outFile.Replace("TName", typeAsName);
+            outFile = s_directory + "/Collections/" + outFile.Replace("TName", typeAsName);
             classTxt = classTxt.Replace("TName", typeAsName);
             classTxt = classTxt.Replace("Type", type);
             using (StreamWriter writer = new StreamWriter(outFile))

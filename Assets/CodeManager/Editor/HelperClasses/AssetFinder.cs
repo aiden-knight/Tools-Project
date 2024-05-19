@@ -16,7 +16,7 @@ namespace AidenK.CodeManager
         /// <summary>
         /// Types that functions are looking for references to 
         /// </summary>
-        private static readonly Type[] _WatchedTypes =
+        private static readonly Type[] s_watchedTypes =
             {
                 typeof(ScriptObjVariableBase),
                 typeof(ScriptObjEventBase),
@@ -48,7 +48,7 @@ namespace AidenK.CodeManager
         /// <returns></returns>
         private static bool IsWatched(Type type)
         {
-            foreach (Type watched in _WatchedTypes)
+            foreach (Type watched in s_watchedTypes)
             {
                 if (type.IsSubclassOf(watched))
                 {

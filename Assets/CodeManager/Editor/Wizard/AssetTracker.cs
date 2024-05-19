@@ -54,22 +54,21 @@ namespace AidenK.CodeManager
         /// <summary> List of asset changes, contains type of change and asset info of asset it refers to </summary>
         public static List<(AssetChanges, AssetInfo)> ChangedAssets = new List<(AssetChanges, AssetInfo)>();
        
-
         // Values to use when attempting to interface with the json file
         public const string JsonFilter = "AidenK.CodeManager.AssetInfo t:TextAsset";
         public const string JsonFileName = "AidenK.CodeManager.AssetInfo.asset";
         public static readonly string[] JsonFolder = { "Assets/AidenK.CodeManager/Settings/" };
 
         /// <summary> List of all scriptable object's asset info </summary>
-        public static List<AssetInfo> AssetInfos = new List<AssetInfo>();
+        static List<AssetInfo> _assetInfos = new List<AssetInfo>();
 
         public static bool FindingAssetReferences = false;
 
         /// <summary> Whether AssetInfos have been loaded </summary>
-        private static bool _loaded = false;
+        private static bool s_loaded = false;
 
         /// <summary> Array of types that the processor should watch for </summary>
-        private static readonly Type[] _WatchedTypes =
+        private static readonly Type[] s_watchedTypes =
             {
                 typeof(ScriptObjVariableBase),
                 typeof(ScriptObjEventBase),
@@ -81,7 +80,7 @@ namespace AidenK.CodeManager
         /// <summary>
         /// Whether there was tracked changes to assets so PostProcess should save them
         /// </summary>
-        static bool _changes = false;
+        static bool s_changes = false;
 
         // must have same order as above array
         private enum TypeIndex
@@ -91,6 +90,28 @@ namespace AidenK.CodeManager
             ScriptObjEnd = 2,
             Scene,
             Prefab,
+        }
+
+        public static int GetAssetCount()
+        {
+            return _assetInfos.Count;
+        }
+
+        public static AssetInfo GetAssetAt(int index)
+        {
+            if(_assetInfos.Count <= index)
+            {
+                return null;
+            }
+            else
+            {
+                return _assetInfos[index];
+            }
+        }
+
+        public static void RemoveAssetAt(int index)
+        {
+            _assetInfos.RemoveAt(index);
         }
 
         public static bool IsChanges()
@@ -131,7 +152,7 @@ namespace AidenK.CodeManager
         {
             foreach (string path in paths)
             {
-                AssetInfo info = AssetInfos.FirstOrDefault(info => info.Path == path);
+                AssetInfo info = _assetInfos.FirstOrDefault(info => info.Path == path);
                 if (info == null) continue;
 
                 if (info.AssetReferencesGUIDs == null)
@@ -150,7 +171,7 @@ namespace AidenK.CodeManager
         {
             foreach (string path in paths)
             {
-                AssetInfo info = AssetInfos.FirstOrDefault(info => info.Path == path);
+                AssetInfo info = _assetInfos.FirstOrDefault(info => info.Path == path);
                 if (info == null) continue;
 
                 if (info.SceneObjectReferences == null)
@@ -171,7 +192,7 @@ namespace AidenK.CodeManager
         /// <returns>Whether the json is or was loaded</returns>
         public static bool CheckLoad()
         {
-            if (_loaded) return true;
+            if (s_loaded) return true;
 
             string[] guids = AssetDatabase.FindAssets(JsonFilter, JsonFolder);
             if (guids.Length == 0) return false;
@@ -180,10 +201,10 @@ namespace AidenK.CodeManager
             if (jsonData == null) return false;
 
             string json = jsonData.text;
-            AssetInfos = JsonConvert.DeserializeObject<List<AssetInfo>>(json);
-            if (AssetInfos == null) return false;
+            _assetInfos = JsonConvert.DeserializeObject<List<AssetInfo>>(json);
+            if (_assetInfos == null) return false;
 
-            _loaded = true;
+            s_loaded = true;
             return true;
         }
 
@@ -207,7 +228,7 @@ namespace AidenK.CodeManager
                 return;
             }
 
-            jsonData = new TextAsset(JsonConvert.SerializeObject(AssetInfos));
+            jsonData = new TextAsset(JsonConvert.SerializeObject(_assetInfos));
             AssetDatabase.CreateAsset(jsonData, path);
             AssetDatabase.SaveAssets();
             EditorWindow.GetWindow<CodeManagerWizard>().RefreshInspector();
@@ -222,20 +243,20 @@ namespace AidenK.CodeManager
         {
             string assetGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(obj));
 
-            AssetInfo assetInfo = AssetInfos.FirstOrDefault(info => info.GUID == assetGUID);
+            AssetInfo assetInfo = _assetInfos.FirstOrDefault(info => info.GUID == assetGUID);
             return assetInfo;
         }
 
         private static TypeIndex GetType(string path)
         {
             Type assetType = AssetDatabase.GetMainAssetTypeAtPath(path);
-            for (int index = 0; index < _WatchedTypes.Length; index++)
+            for (int index = 0; index < s_watchedTypes.Length; index++)
             {
-                if (index <= ((int)TypeIndex.ScriptObjEnd) && assetType.IsSubclassOf(_WatchedTypes[index]))
+                if (index <= ((int)TypeIndex.ScriptObjEnd) && assetType.IsSubclassOf(s_watchedTypes[index]))
                 {
                     return TypeIndex.ScriptObj;
                 }
-                else if (assetType == _WatchedTypes[index])
+                else if (assetType == s_watchedTypes[index])
                 {
                     return (TypeIndex)index;
                 }
@@ -251,7 +272,7 @@ namespace AidenK.CodeManager
             switch (type)
             {
                 case TypeIndex.ScriptObj: // If type is scriptable object add if doesn't exist
-                    if (AssetInfos.Any(info => info.GUID == guid)) return;
+                    if (_assetInfos.Any(info => info.GUID == guid)) return;
                     AssetInfo info = new AssetInfo()
                     {
                         GUID = guid,
@@ -260,7 +281,7 @@ namespace AidenK.CodeManager
                         SceneObjectReferences = null
                     };
                     ChangedAssets.Add((AssetChanges.Created, info));
-                    AssetInfos.Add(info);
+                    _assetInfos.Add(info);
                     break;
                 case TypeIndex.Prefab:
                     AssetFinder.GetPrefabReferenceSingle(guid);
@@ -269,7 +290,7 @@ namespace AidenK.CodeManager
                 default:
                     return;
             }
-            _changes = true;
+            s_changes = true;
         }
 
         // Handle created or modified assets (also occurs when assets have moved)
@@ -292,11 +313,11 @@ namespace AidenK.CodeManager
             switch (type)
             {
                 case TypeIndex.ScriptObj:
-                    AssetInfo info = AssetInfos.FirstOrDefault(info => info.GUID == guid);
+                    AssetInfo info = _assetInfos.FirstOrDefault(info => info.GUID == guid);
                     if (info == null) return;
 
                     ChangedAssets.Add((AssetChanges.Deleted, info));
-                    AssetInfos.Remove(info);
+                    _assetInfos.Remove(info);
                     break;
                 case TypeIndex.Scene:
                     RemoveSceneReferences(path);
@@ -308,7 +329,7 @@ namespace AidenK.CodeManager
                     return;
             }
 
-            _changes = true;
+            s_changes = true;
         }
 
         private static void HandleMoved(string path)
@@ -319,7 +340,7 @@ namespace AidenK.CodeManager
             switch (type)
             {
                 case TypeIndex.ScriptObj:
-                    AssetInfo info = AssetInfos.FirstOrDefault(info => info.GUID == guid);
+                    AssetInfo info = _assetInfos.FirstOrDefault(info => info.GUID == guid);
                     if (info == null) return;
 
                     info.Path = path;
@@ -330,13 +351,13 @@ namespace AidenK.CodeManager
                     return;
             }
 
-            _changes = true;
+            s_changes = true;
         }
 
         static void RemovePrefabReferences(string path)
         {
             string prefabGUID = AssetDatabase.AssetPathToGUID(path);
-            foreach (AssetInfo info in AssetInfos)
+            foreach (AssetInfo info in _assetInfos)
             {
                 if (info.AssetReferencesGUIDs == null) continue;
 
@@ -365,7 +386,7 @@ namespace AidenK.CodeManager
         static void RemoveSceneReferences(string path)
         {
             string sceneGUID = AssetDatabase.AssetPathToGUID(path);
-            foreach (AssetInfo info in AssetInfos)
+            foreach (AssetInfo info in _assetInfos)
             {
                 if (info.SceneObjectReferences == null) continue;
 
@@ -436,10 +457,10 @@ namespace AidenK.CodeManager
             HandleAllImported(importedAssets);
             HandleAllMoved(movedAssets);
             
-            if (_changes)
+            if (s_changes)
             {
                 SaveChanges();
-                _changes = false;
+                s_changes = false;
             }
         }
     }

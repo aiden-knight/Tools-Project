@@ -11,8 +11,8 @@ namespace AidenK.CodeManager
     public class ScriptObjEditor : Editor
     {
         [SerializeField]
-        VisualTreeAsset ReferencesEditor = null;
-        VisualElement ScrollingContainerContent;
+        VisualTreeAsset _referencesEditor = null;
+        VisualElement _scrollingContainerContent;
 
         public void SelectObjectWithInspector(ClickEvent evt, Object obj)
         {
@@ -36,7 +36,7 @@ namespace AidenK.CodeManager
             button.text = name;
             button.name = objectName;
             button.RegisterCallback<ClickEvent, Object>(SelectObject, AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath));
-            ScrollingContainerContent.Add(button);
+            _scrollingContainerContent.Add(button);
         }
 
         void SetupButtonFromSceneObject(Object obj)
@@ -57,7 +57,7 @@ namespace AidenK.CodeManager
             button.text = name;
             button.name = obj.name;
             button.RegisterCallback<ClickEvent, Object>(SelectObjectWithInspector, obj);
-            ScrollingContainerContent.Add(button);
+            _scrollingContainerContent.Add(button);
         }
 
         void SetupButtonFromPrefab(string path)
@@ -69,7 +69,7 @@ namespace AidenK.CodeManager
             button.text = name;
             button.name = obj.name;
             button.RegisterCallback<ClickEvent, Object>(SelectObject, obj);
-            ScrollingContainerContent.Add(button);
+            _scrollingContainerContent.Add(button);
         }
 
         protected virtual VisualElement ExtraContent()
@@ -86,7 +86,7 @@ namespace AidenK.CodeManager
             VisualElement extra = ExtraContent();
             if(extra != null) root.Add(extra);
 
-            VisualElement uxmlElement = ReferencesEditor.Instantiate();
+            VisualElement uxmlElement = _referencesEditor.Instantiate();
             root.Add(uxmlElement);
 
             var scrollV = root.Q<ScrollView>("References");
@@ -94,7 +94,7 @@ namespace AidenK.CodeManager
             {
                 Debug.LogError("Could not find ScrollView: References");
             }
-            ScrollingContainerContent = scrollV.Q("unity-content-container");
+            _scrollingContainerContent = scrollV.Q("unity-content-container");
 
             // get references from json
             AssetInfo assetInfo = AssetTracker.GetAssetInfo(serializedObject.targetObject);
@@ -162,7 +162,7 @@ namespace AidenK.CodeManager
                     }
                 }
 
-                ScrollingContainerContent.Sort(CodeManagerWizard.CompareByName);
+                _scrollingContainerContent.Sort(CodeManagerWizard.CompareByName);
             }
 
             return root;

@@ -6,15 +6,15 @@ namespace AidenK.CodeManager
 {
     public class WizardData : ScriptableObject
     {
-        public int dropdownIndex;
-        public string classType;
+        public int DropdownIndex;
+        public string ClassType;
 
-        public string selectedAssetGUID;
+        public string SelectedAssetGUID;
         public WizardData() 
         {
-            dropdownIndex = 1;
-            classType = "Enter Class Here";
-            selectedAssetGUID = string.Empty;
+            DropdownIndex = 1;
+            ClassType = "Enter Class Here";
+            SelectedAssetGUID = string.Empty;
         }
     }
 }

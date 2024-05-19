@@ -7,7 +7,7 @@ namespace AidenK.CodeManager
     [CreateAssetMenu(menuName = "Code Manager/Events/No Parameter Event", order = 0)]
     public class NoParamEvent : ScriptObjEventBase
     {
-        List<NoParamListener> m_listeners = new();
+        List<NoParamListener> _listeners = new();
 
         private void OnEnable()
         {
@@ -17,20 +17,20 @@ namespace AidenK.CodeManager
         public void Invoke()
         {
             // Iterate backwards in case event involves removing themself as a listener
-            for (int i = m_listeners.Count - 1; i >= 0; i--)
+            for (int i = _listeners.Count - 1; i >= 0; i--)
             {
-                m_listeners[i].Invoke();
+                _listeners[i].Invoke();
             }
         }
 
         public void AddListener(NoParamListener listener)
         {
-            m_listeners.Add(listener);
+            _listeners.Add(listener);
         }
 
         public void RemoveListener(NoParamListener listener)
         {
-            m_listeners.Remove(listener);
+            _listeners.Remove(listener);
         }
     }
 }
