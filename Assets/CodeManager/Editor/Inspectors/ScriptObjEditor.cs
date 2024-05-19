@@ -98,46 +98,68 @@ namespace AidenK.CodeManager
 
             // get references from json
             AssetInfo assetInfo = AssetTracker.GetAssetInfo(serializedObject.targetObject);
-            bool showReferences = assetInfo != null && assetInfo.AssetReferencesGUIDs != null && assetInfo.SceneObjectReferences != null;
-            if(showReferences)
+            if(assetInfo != null)
             {
-                // for each prefab
-                foreach (string guid in assetInfo.AssetReferencesGUIDs)
+                // if the asset has prefab references
+                if(assetInfo.AssetReferencesGUIDs != null)
                 {
-                    string path = AssetDatabase.GUIDToAssetPath(guid);
-                    SetupButtonFromPrefab(path);
-                }
-
-                // get active scenes
-                List<string> activeScenePaths = new List<string>();
-                for(int i = 0; i < EditorSceneManager.sceneCount; i++)
-                {
-                    Scene scene = EditorSceneManager.GetSceneAt(i);
-                    activeScenePaths.Add(scene.path);
-                }
-                // for each game object in scenes
-                foreach (SceneObjectReference objectReference in assetInfo.SceneObjectReferences)
-                {
-                    string path = AssetDatabase.GUIDToAssetPath(objectReference.SceneGUID);
-                    int sceneIndex = activeScenePaths.IndexOf(path);
-                    if (sceneIndex == -1) // if object not in an active scene
+                    // for each prefab
+                    foreach (string guid in assetInfo.AssetReferencesGUIDs)
                     {
-                        SetupButtonFromObject(path, objectReference.ObjectName);
-                        continue;
+                        string path = AssetDatabase.GUIDToAssetPath(guid);
+                        SetupButtonFromPrefab(path);
+                    }
+                }
+                
+                // if the asset has scene object references
+                if(assetInfo.SceneObjectReferences != null)
+                {
+                    // get active scenes
+                    List<string> activeScenePaths = new List<string>();
+                    for (int i = 0; i < EditorSceneManager.sceneCount; i++)
+                    {
+                        Scene scene = EditorSceneManager.GetSceneAt(i);
+                        activeScenePaths.Add(scene.path);
                     }
 
-                    // object is in active scene so find it to reference
-                    Scene scene = EditorSceneManager.GetSceneAt(sceneIndex);
-                    Transform transform = null;
-                    foreach(int index in objectReference.IndexesFromRoot)
+                    // for each game object in scenes
+                    foreach (SceneObjectReference objectReference in assetInfo.SceneObjectReferences)
                     {
-                        if (transform == null)
-                            transform = scene.GetRootGameObjects()[index].transform;
-                        else
-                            transform = transform.GetChild(index);
-                    }
+                        string path = AssetDatabase.GUIDToAssetPath(objectReference.SceneGUID);
+                        int sceneIndex = activeScenePaths.IndexOf(path);
+                        if (sceneIndex == -1) // if object not in an active scene
+                        {
+                            SetupButtonFromObject(path, objectReference.ObjectName);
+                            continue;
+                        }
 
-                    SetupButtonFromSceneObject(transform.gameObject);
+                        // object is in active scene so find it to reference
+                        Scene scene = EditorSceneManager.GetSceneAt(sceneIndex);
+                        Transform transform = null;
+                        foreach (int index in objectReference.IndexesFromRoot)
+                        {
+                            if (transform == null)
+                            {
+                                GameObject[] rootObjects = scene.GetRootGameObjects();
+                                if (index >= rootObjects.Length) break;
+                                else transform = scene.GetRootGameObjects()[index].transform;
+
+                            }
+                            else
+                            {
+                                if(index >= transform.childCount)
+                                {
+                                    transform = null;
+                                    break;
+                                }
+                                transform = transform.GetChild(index);
+
+                            }
+                        }
+
+                        if (transform != null && transform.name == objectReference.ObjectName)
+                            SetupButtonFromSceneObject(transform.gameObject);
+                    }
                 }
 
                 ScrollingContainerContent.Sort(CodeManagerWizard.CompareByName);

@@ -53,15 +53,12 @@ namespace AidenK.CodeManager
     {
         /// <summary> List of asset changes, contains type of change and asset info of asset it refers to </summary>
         public static List<(AssetChanges, AssetInfo)> ChangedAssets = new List<(AssetChanges, AssetInfo)>();
-        public static bool IsChanges()
-        {
-            return ChangedAssets.Count > 0;
-        }
+       
 
-        // Values to use when attempting to reference the json file
-        public const string jsonFilter = "AidenK.CodeManager.AssetInfo t:TextAsset";
-        public const string jsonFileName = "AidenK.CodeManager.AssetInfo.asset";
-        public static readonly string[] jsonFolder = { "Assets/AidenK.CodeManager/Settings/" };
+        // Values to use when attempting to interface with the json file
+        public const string JsonFilter = "AidenK.CodeManager.AssetInfo t:TextAsset";
+        public const string JsonFileName = "AidenK.CodeManager.AssetInfo.asset";
+        public static readonly string[] JsonFolder = { "Assets/AidenK.CodeManager/Settings/" };
 
         /// <summary> List of all scriptable object's asset info </summary>
         public static List<AssetInfo> AssetInfos = new List<AssetInfo>();
@@ -69,10 +66,10 @@ namespace AidenK.CodeManager
         public static bool FindingAssetReferences = false;
 
         /// <summary> Whether AssetInfos have been loaded </summary>
-        private static bool loaded = false;
+        private static bool _loaded = false;
 
         /// <summary> Array of types that the processor should watch for </summary>
-        private static readonly Type[] WatchedTypes =
+        private static readonly Type[] _WatchedTypes =
             {
                 typeof(ScriptObjVariableBase),
                 typeof(ScriptObjEventBase),
@@ -80,6 +77,12 @@ namespace AidenK.CodeManager
                 typeof(SceneAsset),
                 typeof(GameObject),
             };
+
+        /// <summary>
+        /// Whether there was tracked changes to assets so PostProcess should save them
+        /// </summary>
+        static bool _changes = false;
+
         // must have same order as above array
         private enum TypeIndex
         {
@@ -90,12 +93,33 @@ namespace AidenK.CodeManager
             Prefab,
         }
 
+        public static bool IsChanges()
+        {
+            return ChangedAssets.Count > 0;
+        }
+
         public static void FindReferences()
         {
             FindingAssetReferences = true;
             AssetFinder.FindReferences();
             SaveChanges();
             FindingAssetReferences = false;
+        }
+
+        static bool ExistsInList<T>(List<T> list, T item)
+        {
+            return list.Contains(item);
+        }
+
+        static bool CheckEqualReference(SceneObjectReference first, SceneObjectReference second)
+        {
+            if (first.SceneGUID != second.SceneGUID) return false;
+            return first.IndexesFromRoot.SequenceEqual(second.IndexesFromRoot);
+        }
+
+        static bool ExistsInList(List<SceneObjectReference> list, SceneObjectReference item)
+        {
+            return list.Any(sceneRef => CheckEqualReference(sceneRef, item));
         }
 
         /// <summary>
@@ -109,9 +133,35 @@ namespace AidenK.CodeManager
             {
                 AssetInfo info = AssetInfos.FirstOrDefault(info => info.Path == path);
                 if (info == null) continue;
-                if(info.AssetReferencesGUIDs.Contains(prefabGUID)) continue;
 
-                info.AssetReferencesGUIDs.Add(prefabGUID);
+                if (info.AssetReferencesGUIDs == null)
+                {
+                    info.AssetReferencesGUIDs = new List<string> { prefabGUID };
+                }
+                else
+                {
+                    if (ExistsInList(info.AssetReferencesGUIDs, prefabGUID)) return;
+                    info.AssetReferencesGUIDs.Add(prefabGUID);
+                }
+            }
+        }
+
+        public static void AddAllSceneObjectReferences(List<string> paths, SceneObjectReference reference)
+        {
+            foreach (string path in paths)
+            {
+                AssetInfo info = AssetInfos.FirstOrDefault(info => info.Path == path);
+                if (info == null) continue;
+
+                if (info.SceneObjectReferences == null)
+                {
+                    info.SceneObjectReferences = new List<SceneObjectReference> { reference };
+                }
+                else
+                {
+                    if (ExistsInList(info.SceneObjectReferences, reference)) return;
+                    info.SceneObjectReferences.Add(reference);
+                }
             }
         }
 
@@ -121,9 +171,9 @@ namespace AidenK.CodeManager
         /// <returns>Whether the json is or was loaded</returns>
         public static bool CheckLoad()
         {
-            if (loaded) return true;
+            if (_loaded) return true;
 
-            string[] guids = AssetDatabase.FindAssets(jsonFilter, jsonFolder);
+            string[] guids = AssetDatabase.FindAssets(JsonFilter, JsonFolder);
             if (guids.Length == 0) return false;
 
             TextAsset jsonData = AssetDatabase.LoadAssetAtPath<TextAsset>(AssetDatabase.GUIDToAssetPath(guids[0]));
@@ -133,7 +183,7 @@ namespace AidenK.CodeManager
             AssetInfos = JsonConvert.DeserializeObject<List<AssetInfo>>(json);
             if (AssetInfos == null) return false;
 
-            loaded = true;
+            _loaded = true;
             return true;
         }
 
@@ -142,10 +192,10 @@ namespace AidenK.CodeManager
         /// </summary>
         public static void SaveChanges()
         {
-            string[] guids = AssetDatabase.FindAssets(jsonFilter, jsonFolder);
+            string[] guids = AssetDatabase.FindAssets(JsonFilter, JsonFolder);
             if (guids.Length == 0)
             {
-                Debug.LogWarning(string.Format("Expected [{0}] to exist in folder: {1}", jsonFilter, jsonFolder[0]));
+                Debug.LogWarning(string.Format("Expected [{0}] to exist in folder: {1}", JsonFilter, JsonFolder[0]));
                 return;
             }
 
@@ -153,13 +203,14 @@ namespace AidenK.CodeManager
             TextAsset jsonData = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
             if (jsonData == null)
             {
-                Debug.LogWarning(string.Format("Expected [{0}] to not load as null", jsonFilter));
+                Debug.LogWarning(string.Format("Expected [{0}] to not load as null", JsonFilter));
                 return;
             }
 
             jsonData = new TextAsset(JsonConvert.SerializeObject(AssetInfos));
             AssetDatabase.CreateAsset(jsonData, path);
             AssetDatabase.SaveAssets();
+            EditorWindow.GetWindow<CodeManagerWizard>().RefreshInspector();
         }
 
         /// <summary>
@@ -178,13 +229,13 @@ namespace AidenK.CodeManager
         private static TypeIndex GetType(string path)
         {
             Type assetType = AssetDatabase.GetMainAssetTypeAtPath(path);
-            for (int index = 0; index < WatchedTypes.Length; index++)
+            for (int index = 0; index < _WatchedTypes.Length; index++)
             {
-                if (index <= ((int)TypeIndex.ScriptObjEnd) && assetType.IsSubclassOf(WatchedTypes[index]))
+                if (index <= ((int)TypeIndex.ScriptObjEnd) && assetType.IsSubclassOf(_WatchedTypes[index]))
                 {
                     return TypeIndex.ScriptObj;
                 }
-                else if (assetType == WatchedTypes[index])
+                else if (assetType == _WatchedTypes[index])
                 {
                     return (TypeIndex)index;
                 }
@@ -211,6 +262,9 @@ namespace AidenK.CodeManager
                     ChangedAssets.Add((AssetChanges.Created, info));
                     AssetInfos.Add(info);
                     break;
+                case TypeIndex.Prefab:
+                    AssetFinder.GetPrefabReferenceSingle(guid);
+                    break;
 
                 default:
                     return;
@@ -231,6 +285,8 @@ namespace AidenK.CodeManager
         public static void HandleDeleted(string path)
         {
             string guid = AssetDatabase.AssetPathToGUID(path);
+            if (guid == string.Empty) return;
+
             TypeIndex type = GetType(path);
 
             switch (type)
@@ -242,7 +298,12 @@ namespace AidenK.CodeManager
                     ChangedAssets.Add((AssetChanges.Deleted, info));
                     AssetInfos.Remove(info);
                     break;
-
+                case TypeIndex.Scene:
+                    RemoveSceneReferences(path);
+                    break;
+                case TypeIndex.Prefab:
+                    RemovePrefabReferences(path);
+                    break;
                 default:
                     return;
             }
@@ -272,11 +333,85 @@ namespace AidenK.CodeManager
             _changes = true;
         }
 
+        static void RemovePrefabReferences(string path)
+        {
+            string prefabGUID = AssetDatabase.AssetPathToGUID(path);
+            foreach (AssetInfo info in AssetInfos)
+            {
+                if (info.AssetReferencesGUIDs == null) continue;
+
+                int count = 0;
+                int startIndex = -1;
+                int length = info.AssetReferencesGUIDs.Count;
+                for (int index = 0; index < length; ++index)
+                {
+                    if (info.AssetReferencesGUIDs[index] != prefabGUID)
+                    {
+                        if (startIndex != -1) break;
+                        else continue;
+                    }
+
+                    if (startIndex == -1) startIndex = index;
+                    count++;
+                }
+
+                if(startIndex != -1)
+                {
+                    info.AssetReferencesGUIDs.RemoveRange(startIndex, count);
+                }
+            }
+        }
+
+        static void RemoveSceneReferences(string path)
+        {
+            string sceneGUID = AssetDatabase.AssetPathToGUID(path);
+            foreach (AssetInfo info in AssetInfos)
+            {
+                if (info.SceneObjectReferences == null) continue;
+
+                int count = 0;
+                int startIndex = -1;
+                int length = info.SceneObjectReferences.Count;
+                for (int index = 0; index < length; ++index)
+                {
+                    SceneObjectReference sceneRef = info.SceneObjectReferences[index];
+                    if (sceneRef.SceneGUID != sceneGUID)
+                    {
+                        if (startIndex != -1) break;
+                        else continue;
+                    }
+
+                    if (startIndex == -1) startIndex = index;
+                    count++;
+                }
+
+                if( startIndex != -1)
+                {
+                    info.SceneObjectReferences.RemoveRange(startIndex, count);
+                }
+            }
+        }
+
         public static void HandleSceneSaved(string path)
         {
+            if(!CheckLoad()) return;
             Scene scene = EditorSceneManager.GetActiveScene();
             if (scene.path != path) return;
-            
+
+            RemoveSceneReferences(path);
+
+            AssetFinder.GetSceneReferences();
+            SaveChanges();
+        }
+
+        public static void HandlePrefabSaved(string path)
+        {
+            if (!CheckLoad()) return;
+
+            RemovePrefabReferences(path);
+
+            AssetFinder.GetPrefabReferenceSingle(AssetDatabase.AssetPathToGUID(path));
+            SaveChanges();
         }
 
         // Handles any moved assets
@@ -288,8 +423,6 @@ namespace AidenK.CodeManager
             }
         }
 
-        // Whether there was changes
-        static bool _changes = false;
         // When inheriting from AssetPostprocessor, implementing this function captures changes to assets
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
@@ -329,6 +462,10 @@ namespace AidenK.CodeManager
                     if(type == typeof(SceneAsset))
                     {
                         AssetTracker.HandleSceneSaved(path);
+                    }
+                    else if(type == typeof(GameObject))
+                    {
+                        AssetTracker.HandlePrefabSaved(path);
                     }
                 }
             }

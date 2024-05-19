@@ -6,38 +6,36 @@ using UnityEngine.UIElements;
 using Newtonsoft.Json;
 using Enum = System.Enum;
 using UnityEditor.SceneManagement;
+using System;
 
 namespace AidenK.CodeManager
 {
     public class CodeManagerWizard : EditorWindow
     {
         [SerializeField]
-        private VisualTreeAsset m_VisualTreeAsset = default;
+        private VisualTreeAsset _visualTreeAsset = default;
         [SerializeField]
-        private StyleSheet uss;
+        private StyleSheet _USS;
 
-        VisualElement ScrollingContainerContent;
+        VisualElement _scrollingContainerContent;
        
         public TextField ClassType;
         public DropdownField GenerateType;
 
         // For ensuring fields don't reset on unity reimport
-        [SerializeField] WizardData wizardData;
+        [SerializeField] WizardData _wizardData;
 
         // container to put the created inspector in
-        VisualElement inspectorContainer = null;
+        VisualElement _inspectorContainer = null;
 
         // reference to the created inspector to remove later
-        VisualElement currentInspector = null;
-        // path of the selected object so that when it is deleted the inspector can be deleted too
-        string selectedObjGUID = null;
+        VisualElement _currentInspector = null;
 
         // Window creation and showing
-        static CodeManagerWizard Instance;
         [MenuItem("Window/Code Manager/Wizard", priority = -5)]
         public static void ShowExample()
         {
-            Instance = GetWindow<CodeManagerWizard>(false, "Code Manager", true);
+            GetWindow<CodeManagerWizard>(false, "Code Manager", true);
         }
 
 
@@ -49,9 +47,9 @@ namespace AidenK.CodeManager
             Button button = new Button();
             button.text = info.Path.Substring("Assets/".Length);
             button.name = info.GUID;
-            button.styleSheets.Add(uss);
+            button.styleSheets.Add(_USS);
             button.RegisterCallback<ClickEvent, string>(SelectAssetCallback, info.GUID);
-            ScrollingContainerContent.Add(button);
+            _scrollingContainerContent.Add(button);
         }
 
         void GenerateClass(ClickEvent evt)
@@ -62,29 +60,28 @@ namespace AidenK.CodeManager
 
         void Deselect()
         {
-            if (currentInspector != null)
+            if (_currentInspector != null)
             {
-                inspectorContainer.Remove(currentInspector);
-                currentInspector = null;
+                _inspectorContainer.Remove(_currentInspector);
+                _currentInspector = null;
             }
-            wizardData.selectedAssetGUID = string.Empty;
+            _wizardData.selectedAssetGUID = string.Empty;
         }
         void Deselect(ClickEvent evt) { Deselect(); }
 
         void FindAllReferences(ClickEvent evt)
         {
-            Deselect();
             AssetTracker.FindReferences();
         }
 
         void ClassTypeChanged(ChangeEvent<string> evt)
         {
-            wizardData.classType = ClassType.value;
+            _wizardData.classType = ClassType.value;
         }
 
         void GenerateTypeChanged(ChangeEvent<string> evt)
         {
-            wizardData.dropdownIndex = GenerateType.index;
+            _wizardData.dropdownIndex = GenerateType.index;
         }
 
         // Sets up the UI for the window on window creation
@@ -94,13 +91,13 @@ namespace AidenK.CodeManager
             VisualElement root = rootVisualElement;
 
             // Instantiate UXML
-            VisualElement labelFromUXML = m_VisualTreeAsset.Instantiate();
+            VisualElement labelFromUXML = _visualTreeAsset.Instantiate();
             root.Add(labelFromUXML);
 
             var scrollV = root.Q<ScrollView>("ScriptableObjects");
-            ScrollingContainerContent = scrollV.Q("unity-content-container");
+            _scrollingContainerContent = scrollV.Q("unity-content-container");
 
-            inspectorContainer = root.Q("Inspector");
+            _inspectorContainer = root.Q("Inspector");
 
             root.Q<Button>("FindReferences").RegisterCallback<ClickEvent>(FindAllReferences);
             root.Q<Button>("DeselectScriptObj").RegisterCallback<ClickEvent>(Deselect);
@@ -121,18 +118,18 @@ namespace AidenK.CodeManager
             string[] wizDataGuid = AssetDatabase.FindAssets("t:WizardData", new[] { "Assets/AidenK.CodeManager/Settings" });
             if(wizDataGuid.Length > 0)
             {
-                wizardData = AssetDatabase.LoadAssetAtPath<WizardData>(AssetDatabase.GUIDToAssetPath(wizDataGuid[0]));
+                _wizardData = AssetDatabase.LoadAssetAtPath<WizardData>(AssetDatabase.GUIDToAssetPath(wizDataGuid[0]));
             }
             else
             {
-                wizardData = ScriptableObject.CreateInstance<WizardData>();
-                AssetDatabase.CreateAsset(wizardData, "Assets/AidenK.CodeManager/WizardData.asset");
+                _wizardData = ScriptableObject.CreateInstance<WizardData>();
+                AssetDatabase.CreateAsset(_wizardData, "Assets/AidenK.CodeManager/WizardData.asset");
                 AssetDatabase.SaveAssets();
             }
 
             // get the saved data for class generation
-            ClassType.value = wizardData.classType;
-            GenerateType.index = wizardData.dropdownIndex;
+            ClassType.value = _wizardData.classType;
+            GenerateType.index = _wizardData.dropdownIndex;
 
             // setup generation callbacks
             ClassType.RegisterValueChangedCallback(ClassTypeChanged);
@@ -163,12 +160,13 @@ namespace AidenK.CodeManager
                 }
 
                 TextAsset jsonAsset = new TextAsset(JsonConvert.SerializeObject(assetInfos));
-                string path = AssetTracker.jsonFolder[0] + AssetTracker.jsonFileName;
+                string path = AssetTracker.JsonFolder[0] + AssetTracker.JsonFileName;
                 AssetDatabase.CreateAsset(jsonAsset, path);
                 AssetDatabase.SaveAssets();
             }
             else
             {
+                // if any of the assets in assets info no longer exist remove them
                 bool saveChanges = false;
                 foreach(AssetInfo assetinfo in AssetTracker.AssetInfos)
                 {
@@ -188,46 +186,70 @@ namespace AidenK.CodeManager
                 }
             }
 
-            if (wizardData.selectedAssetGUID != string.Empty)
+            if (_wizardData.selectedAssetGUID != string.Empty)
             {
-                VisualElement elem = ScrollingContainerContent.Children().FirstOrDefault(elem => elem.name == wizardData.selectedAssetGUID);
+                VisualElement elem = _scrollingContainerContent.Children().FirstOrDefault(elem => elem.name == _wizardData.selectedAssetGUID);
                 if (elem == null)
                 {
-                    wizardData.selectedAssetGUID = string.Empty;
+                    _wizardData.selectedAssetGUID = string.Empty;
                 }
                 else
                 {
-                    SelectAsset(wizardData.selectedAssetGUID);
+                    SelectAsset(_wizardData.selectedAssetGUID, false);
                 }
             }
 
-            ScrollingContainerContent.Sort(CompareByName);
+            _scrollingContainerContent.Sort(CompareByName);
             AssetTracker.ChangedAssets.Clear();
+
+            // if scene has changed refresh inspector to show changes
+            EditorSceneManager.activeSceneChangedInEditMode += (sceneOne, sceneTwo) => RefreshInspector();
         }
 
         // show asset's inspector and select it in assets folder
-        private void SelectAsset(string guid)
+        private void SelectAsset(string guid, bool fromButton = true)
         {
-            if (currentInspector != null)
+            if (_currentInspector != null)
             {
-                inspectorContainer.Remove(currentInspector);
-                currentInspector = null;
+                _inspectorContainer.Remove(_currentInspector);
+                _currentInspector = null;
             }
 
-            EditorUtility.FocusProjectWindow();
             UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(UnityEngine.Object));
-            Selection.activeObject = asset;
-            selectedObjGUID = guid;
+            if (fromButton)
+            {
+                EditorUtility.FocusProjectWindow();
+                Selection.activeObject = asset;
+                _wizardData.selectedAssetGUID = guid;
+                EditorGUIUtility.PingObject(asset);
+            }
 
-            currentInspector = Editor.CreateEditor(asset).CreateInspectorGUI();
-            inspectorContainer.Add(currentInspector);
+            _currentInspector = Editor.CreateEditor(asset).CreateInspectorGUI();
+            _inspectorContainer.Add(_currentInspector);
+        }
+
+        /// <summary>
+        /// If there have been any changes, refresh asset inspector
+        /// </summary>
+        public void RefreshInspector()
+        {
+            if (_currentInspector != null && _wizardData.selectedAssetGUID != null)
+            {
+                UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(_wizardData.selectedAssetGUID), typeof(UnityEngine.Object));
+
+                _inspectorContainer.Remove(_currentInspector);
+                _currentInspector = null;
+
+                _currentInspector = Editor.CreateEditor(asset).CreateInspectorGUI();
+                _inspectorContainer.Add(_currentInspector);
+            }
         }
 
         // callback event for clicking a button that references a scriptable object
         void SelectAssetCallback(ClickEvent evt, string guid)
         {
             SelectAsset(guid);
-            wizardData.selectedAssetGUID = guid;
+            _wizardData.selectedAssetGUID = guid;
         }
 
         // compares visual elements by name to sort the scroll view
@@ -251,13 +273,13 @@ namespace AidenK.CodeManager
 
         void RemoveDeletedAssetButton(AssetInfo assetInfo)
         {
-            VisualElement deleted = ScrollingContainerContent.Children().FirstOrDefault(elem => elem.name == assetInfo.GUID);
+            VisualElement deleted = _scrollingContainerContent.Children().FirstOrDefault(elem => elem.name == assetInfo.GUID);
             if (deleted == null) return;
             
-            ScrollingContainerContent.Remove(deleted);
+            _scrollingContainerContent.Remove(deleted);
 
             // if the removed element was selected remove the inspector for it
-            if (deleted.name == selectedObjGUID)
+            if (deleted.name == _wizardData.selectedAssetGUID)
             {
                 Deselect();
             }
@@ -265,7 +287,7 @@ namespace AidenK.CodeManager
 
         void UpdateMovedAssetButton(AssetInfo assetInfo)
         {
-            VisualElement moved = ScrollingContainerContent.Children().FirstOrDefault(elem => elem.name == assetInfo.GUID);
+            VisualElement moved = _scrollingContainerContent.Children().FirstOrDefault(elem => elem.name == assetInfo.GUID);
             if (moved == null) return;
 
             if (moved is Button button)
@@ -296,7 +318,8 @@ namespace AidenK.CodeManager
                     }
                 }
 
-                ScrollingContainerContent.Sort(CompareByName);
+                _scrollingContainerContent.Sort(CompareByName);
+                RefreshInspector();
                 AssetTracker.ChangedAssets.Clear();
             }
         }
