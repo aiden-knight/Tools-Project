@@ -1,10 +1,11 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/CodeManager/Editor/Wizard/CodeManagerWizard.uss?fileID=7433441132597879392&amp;guid=e34849304aefb594f9d1a07c00cd92a5&amp;type=3#CodeManagerWizard" />
     <ui:Label tabindex="-1" text="Scriptable Objects:" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
-    <ui:ScrollView name="ScriptableObjects" style="height: 259px;" />
-    <ui:Button text="Find All References" display-tooltip-when-elided="true" name="FindReferences" />
+    <ui:ScrollView name="ScriptableObjects" style="max-height: 40%;" />
+    <ui:Button text="Find All References" display-tooltip-when-elided="true" name="FindReferences" style="margin-top: 20px;" />
     <ui:Button text="Deselect" display-tooltip-when-elided="true" name="DeselectScriptObj" />
-    <ui:VisualElement name="Inspector" style="flex-grow: 1; margin-top: 20px;" />
+    <ui:Label tabindex="-1" text="Inspector:" display-tooltip-when-elided="true" name="InspectorLabel" style="margin-top: 20px;" />
+    <ui:ScrollView name="Inspector" style="max-height: 40%;" />
     <ui:VisualElement name="ClassGeneration" style="flex-grow: 0.5; background-color: rgba(0, 0, 0, 0); padding-top: 20px;">
         <ui:TextField picking-mode="Ignore" value="Enter Class Type" name="ClassType" />
         <ui:DropdownField index="-1" name="GenerateType" />
