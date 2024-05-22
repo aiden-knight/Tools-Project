@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using UnityEngine;
-using UnityEngine.Events;
+using System;
 using UnityEngine.SceneManagement;
 
 namespace AidenK.CodeManager
@@ -27,7 +27,7 @@ namespace AidenK.CodeManager
         }
 
         [HideInInspector]
-        public UnityEvent<T> onValueChanged;
+        public Action<T> onValueChanged;
 
         void OnEnable()
         {
