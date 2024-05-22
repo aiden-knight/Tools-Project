@@ -8,6 +8,7 @@ using Enum = System.Enum;
 using UnityEditor.SceneManagement;
 using System;
 using System.IO;
+using UnityEngine.SceneManagement;
 
 namespace AidenK.CodeManager
 {
@@ -207,7 +208,9 @@ namespace AidenK.CodeManager
             AssetTracker.ChangedAssets.Clear();
 
             // if scene has changed refresh inspector to show changes
-            EditorSceneManager.activeSceneChangedInEditMode += (sceneOne, sceneTwo) => RefreshInspector();
+            EditorSceneManager.activeSceneChangedInEditMode += (newScene, oldScene) => RefreshInspector();
+            EditorSceneManager.sceneClosed += (scene) => RefreshInspector();
+            EditorSceneManager.sceneOpened += (scene, mode) => RefreshInspector();
         }
 
         // show asset's inspector and select it in assets folder

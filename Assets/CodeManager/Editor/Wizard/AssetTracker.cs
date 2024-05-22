@@ -416,8 +416,9 @@ namespace AidenK.CodeManager
         public static void HandleSceneSaved(string path)
         {
             if(!CheckLoad()) return;
-            Scene scene = EditorSceneManager.GetActiveScene();
-            if (scene.path != path) return;
+
+            Scene scene = EditorSceneManager.GetSceneByPath(path);
+            if (!scene.IsValid()) return;
 
             RemoveSceneReferences(path);
 

@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using Scene = UnityEngine.SceneManagement.Scene;
 
@@ -39,8 +40,8 @@ namespace AidenK.CodeManager
         {
             if(Selection.activeObject == data.SceneObject)
             {
-                EditorSceneManager.OpenScene(data.Path);
-                Object sceneObject = GetObjectInScene(data.SceneObjectReference);
+                Scene scene = EditorSceneManager.OpenScene(data.Path, OpenSceneMode.Additive);
+                Object sceneObject = GetObjectInScene(data.SceneObjectReference, scene);
                 SelectObjectWithInspector(evt, sceneObject);
             }
             else
@@ -109,10 +110,9 @@ namespace AidenK.CodeManager
             return null;
         }
         
-        Object GetObjectInScene(SceneObjectReference objectReference, int sceneIndex = 0)
+        Object GetObjectInScene(SceneObjectReference objectReference, Scene scene)
         {
             // object is in active scene so find it to reference
-            Scene scene = EditorSceneManager.GetSceneAt(sceneIndex);
             Transform transform = null;
             foreach (int index in objectReference.IndexesFromRoot)
             {
@@ -178,26 +178,27 @@ namespace AidenK.CodeManager
                 if(assetInfo.SceneObjectReferences != null)
                 {
                     // get active scenes
-                    List<string> activeScenePaths = new List<string>();
-                    for (int i = 0; i < EditorSceneManager.sceneCount; i++)
+                    List<Scene> activeScenes = new List<Scene>();
+                    for (int i = 0; i < SceneManager.sceneCount; i++)
                     {
-                        Scene scene = EditorSceneManager.GetSceneAt(i);
-                        activeScenePaths.Add(scene.path);
+                        Scene scene = SceneManager.GetSceneAt(i);
+                        if(scene.isLoaded)
+                            activeScenes.Add(scene);
                     }
 
                     // for each game object in scenes
                     foreach (SceneObjectReference objectReference in assetInfo.SceneObjectReferences)
                     {
                         string scenePath = AssetDatabase.GUIDToAssetPath(objectReference.SceneGUID);
-                        int sceneIndex = activeScenePaths.IndexOf(scenePath);
-                        if (sceneIndex == -1) // if object not in an active scene
+                        Scene scene = activeScenes.FirstOrDefault(activeScene => activeScene.path.Equals(scenePath));
+                        if (!scene.IsValid()) // if object not in an active scene
                         {
                             SetupButtonFromSceneAsset(scenePath, objectReference);
                             continue;
                         }
 
-
-                        Object sceneObject = GetObjectInScene(objectReference, sceneIndex);
+                        
+                        Object sceneObject = GetObjectInScene(objectReference, scene);
                         if (sceneObject != null) SetupButtonFromSceneObject(sceneObject);
                     }
                 }
