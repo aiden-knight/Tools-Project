@@ -231,7 +231,7 @@ namespace AidenK.CodeManager
             jsonData = new TextAsset(JsonConvert.SerializeObject(_assetInfos));
             AssetDatabase.CreateAsset(jsonData, path);
             AssetDatabase.SaveAssets();
-            EditorWindow.GetWindow<CodeManagerWizard>().RefreshInspector();
+            EditorWindow.GetWindow<CodeManagerWizard>("Code Manager", false).RefreshInspector();
         }
 
         /// <summary>
